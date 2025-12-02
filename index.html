@@ -559,6 +559,38 @@
                 dashboard: { id: "User ID", level: "Level", exp: "EXP", score: "Latest Score" }
             }
         };
+        // glossaryQuiz.js — 自動產生題庫
+const glossary = [
+  { en: "Generative AI", zh: "生成式人工智慧", def: "依據訓練資料..." },
+  { en: "GPT", zh: "語言模型", def: "OpenAI 的大型語言模型..." },
+  ...
+];
+
+function buildQuizFromGlossary() {
+  const quiz = [];
+
+  glossary.forEach(term => {
+    quiz.push({
+      q: `「${term.zh}」的英文是什麼？`,
+      a: term.en
+    });
+
+    quiz.push({
+      q: `What is the Chinese translation of “${term.en}”?`,
+      a: term.zh
+    });
+
+    quiz.push({
+      q: `哪個詞語符合以下定義：「${term.def}」？`,
+      a: `${term.en} / ${term.zh}`
+    });
+  });
+
+  return quiz;
+}
+
+module.exports = buildQuizFromGlossary;
+
 
         // --- 核心邏輯 (App Logic) ---
 
