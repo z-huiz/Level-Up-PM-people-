@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Level-Up! PM people!</title>
+    
+    <!-- 啟用 Tailwind CSS -->
+    <script>
+        window.tailwind = window.tailwind || {}; 
+        tailwind.config = {
+          darkMode: 'class',
+          theme: {
+            extend: {
+                colors: {
+                    pm: {
+                        primary: '#4F46E5', // Indigo 600
+                        secondary: '#4338ca', // Indigo 700
+                        accent: '#F59E0B', // Amber 500
+                    }
+                }
+            },
+          }
+        }
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Load Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body { font-family: 'Inter', sans-serif; }
+
+        /* --- 側邊欄收合樣式 --- */
+        #sidebar { transition: width 0.3s ease-in-out; }
+        #sidebar.collapsed { width: 4.5rem; }
+        #sidebar.collapsed .nav-text { display: none; }
+        #sidebar.collapsed .nav-link { justify-content: center; }
+        #sidebar.collapsed #sidebar-header { justify-content: center; }
+        #sidebar.collapsed #sidebar-header h2 { display: none; }
+        
+        /* --- 穩健的 Accordion 動畫 (Grid Method) --- */
+        .accordion-content-wrapper {
+            display: grid;
+            grid-template-rows: 0fr;
+            transition: grid-template-rows 0.3s ease-out;
+        }
+        .accordion-item.open .accordion-content-wrapper {
+            grid-template-rows: 1fr;
+        }
+        .accordion-content-inner {
+            overflow: hidden;
+        }
+
+        /* 表格樣式 */
+        .content-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+            margin-bottom: 1rem;
+            font-size: 0.95rem;
+        }
+        .content-table th {
+            background-color: #EEF2FF; /* Indigo 50 */
+            color: #3730A3; /* Indigo 800 */
+            font-weight: 600;
+            text-align: left;
+            padding: 0.75rem;
+            border-bottom: 2px solid #E0E7FF;
+        }
+        .content-table td {
+            padding: 0.75rem;
+            border-bottom: 1px solid #E5E7EB;
+            color: #374151; /* Gray 700 */
+            vertical-align: top;
+        }
+        .content-table tr:last-child td { border-bottom: none; }
+
+        /* 字典樣式 */
+        .glossary-category {
+            @apply border-t pt-6 mt-6 first:border-t-0 first:pt-0 first:mt-0;
+        }
+        .glossary-term-item {
+             @apply mt-4 pt-4 border-t border-gray-100 first:mt-0 first:pt-0 first:border-t-0;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 text-gray-900 min-h-screen flex flex-col">
+
+    <!-- 頂部導覽列 -->
+    <header class="sticky top-0 z-20 bg-white border-b border-gray-200 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex justify-between items-center">
+            <h1 id="main-title" class="text-2xl font-extrabold text-indigo-600 tracking-tight">Level-Up! PM people!</h1>
+            <div class="flex items-center gap-3">
+                <button id="lang-toggle" class="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-gray-300 hover:bg-gray-50 text-sm font-medium transition-colors text-gray-700">
+                    <i data-lucide="globe" class="w-4 h-4"></i>
+                    <span id="current-lang-text">繁體中文</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div class="flex flex-1 overflow-hidden max-w-7xl mx-auto w-full">
+        <!-- 側邊欄 -->
+        <nav id="sidebar" class="w-64 bg-white border-r border-gray-200 flex flex-col flex-shrink-0">
+            <div class="p-4 border-b border-gray-100 flex justify-between items-center" id="sidebar-header">
+                <h2 class="text-xs font-bold text-gray-400 uppercase tracking-wider">Navigation</h2>
+                <button id="sidebar-toggle" class="p-1 rounded-md hover:bg-gray-100 text-gray-500 transition-transform">
+                    <i id="toggle-icon" data-lucide="chevrons-left" class="w-5 h-5"></i>
+                </button>
+            </div>
+            
+            <div id="nav-list" class="flex-1 overflow-y-auto p-3 space-y-1">
+                <!-- 導覽連結由 JS 生成 -->
+            </div>
+        </nav>
+
+        <!-- 主內容區 -->
+        <main id="content-area" class="flex-1 overflow-y-auto p-6 md:p-10 relative">
+            
+            <!-- 1. 歡迎頁面 -->
+            <section id="welcome" class="content-section active text-center py-16">
+                <div class="inline-flex items-center justify-center p-4 bg-indigo-50 rounded-full mb-6">
+                    <i data-lucide="rocket" class="w-12 h-12 text-indigo-600"></i>
+                </div>
+                <h2 class="text-4xl font-extrabold text-gray-900 mb-4" id="welcome-title">Welcome to Level-Up! PM people!</h2>
+                <p class="text-xl text-gray-600 max-w-2xl mx-auto" id="welcome-message">
+                    Your journey to becoming a professional Product Manager starts here. Select a module from the sidebar to begin.
+                </p>
+            </section>
+
+            <!-- 2. 小組介紹 -->
+            <section id="group-intro" class="content-section hidden">
+                <h2 class="text-3xl font-bold mb-8 text-indigo-700 pb-2 border-b border-gray-200" data-section-title="group-intro">Group Introduction</h2>
+                <div id="group-intro-content"></div>
+            </section>
+
+            <!-- 3. 學習專區 (核心修正) -->
+            <section id="learning-zone" class="content-section hidden">
+                <h2 class="text-3xl font-bold mb-8 text-indigo-700 pb-2 border-b border-gray-200" data-section-title="learning-zone">Learning Zone</h2>
+                <div id="learning-accordion" class="space-y-4 max-w-4xl mx-auto"></div>
+            </section>
+
+            <!-- 4. 專有名詞字典 -->
+            <section id="glossary" class="content-section hidden">
+                <h2 class="text-3xl font-bold mb-8 text-indigo-700 pb-2 border-b border-gray-200" data-section-title="glossary">Terminology Dictionary</h2>
+                <div id="glossary-content" class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                    <!-- 字典內容將由 JS 渲染 -->
+                </div>
+            </section>
+
+            <!-- 5. 測驗區 -->
+            <section id="quiz-area" class="content-section hidden">
+                <h2 class="text-3xl font-bold mb-8 text-indigo-700 pb-2 border-b border-gray-200" data-section-title="quiz-area">Quiz Area</h2>
+                <div class="bg-indigo-50 rounded-xl p-8 text-center border border-indigo-100">
+                    <i data-lucide="brain-circuit" class="w-16 h-16 text-indigo-500 mx-auto mb-4"></i>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">Ready to test your knowledge?</h3>
+                    <p class="text-gray-600 mb-6">Take a quick quiz to evaluate your understanding of this week's topics.</p>
+                    <button class="bg-indigo-600 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200">
+                        Start Quiz
+                    </button>
+                </div>
+            </section>
+
+            <!-- 6. 個人介面 -->
+            <section id="dashboard" class="content-section hidden">
+                <div id="dashboard-content"></div>
+            </section>
+        </main>
+    </div>
+
+    <!-- JavaScript 邏輯 -->
+    <script>
+        // --- 數據定義 (Data Definitions) ---
+
+        // 小組成員
+        const teamMembers = [
+            { name_en: 'Laura 鄭慧真', name_zh: 'Laura 鄭慧真', info: 'IBS5', photo_id: 1, video: 'https://youtu.be/ycQS9Fx_58E?si=-AkhtL6ulQeBHZ9E' },
+            { name_en: 'Jane 蔡家榛', name_zh: 'Jane 蔡家榛', info: 'ECON4', photo_id: 2, video: 'https://youtu.be/gjCJ-C87meA?si=p7gLlVU9OXUKOp_J' },
+            { name_en: 'Sharron 吳昱侖', name_zh: 'Sharron 吳昱侖', info: 'DICE3', photo_id: 3, video: 'https://youtu.be/BGgHn7wTS7I?si=fEAq4ZEgZeAcU_Aj' },
+            { name_en: 'Ian 吳秉益', name_zh: 'Ian 吳秉益', info: 'IPCM1', photo_id: 4, video: 'https://www.youtube.com/shorts/WXl6pFT-t_I' },
+        ];
+
+        // 個人資料
+        const userData = { id: 'LVUP-P007', level: 1, exp: 45, nextExp: 100, score: 88 };
+
+        // 學習專區完整內容 (來自您的檔案)
+        const learningData = {
+            'W1': {
+                title: 'Week 1: See the World, Understand Industry, Shape Yourself',
+                content: `
+                    <div class="prose max-w-none text-gray-700">
+                        <h4 class="text-lg font-bold text-indigo-700 mb-2">Three-level Approach to Career Planning</h4>
+                        <p class="mb-4">
+                            <strong>1. See the World:</strong> Recognize that personal growth is actively shaped by a large, interconnected ecosystem, including university resources, industry structures, and major global forces. These are often identified using the <strong>PESTEL framework</strong> (Political, Economic, Social, Technological, Environmental, Legal).
+                        </p>
+                        <p class="mb-4">
+                            <strong>2. Understand Industry:</strong> Zoom in to examine the professional world's structure. The path is structured like a funnel: <em>Industry → Companies → Departments → Positions → Job Description (JD)</em>. To qualify, one must develop the <strong>KSA framework</strong>: Knowledge (Theory), Skill (Hands-on), and Attitude (Mindset).
+                        </p>
+                        <p class="mb-4">
+                            <strong>3. Shape Yourself:</strong> Take full ownership of your development (Self-Directed Learning), using university resources to build your unique KSA profile.
+                        </p>
+                        
+                        <h4 class="text-lg font-bold text-indigo-700 mt-6 mb-2">Key Concepts & Definitions</h4>
+                        <table class="content-table">
+                            <thead><tr><th>Keyword</th><th>Definition</th></tr></thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>三層次架構</strong><br>(Three-level framework)</td>
+                                    <td>A systematic "map" to help students locate, plan, and connect university learning with future career aspirations.</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>看見世界</strong><br>(See the World)</td>
+                                    <td>Recognizing personal growth is shaped by a large ecosystem, global trends, and PESTEL factors.</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>了解產業價值鏈</strong><br>(Understand Industry Value Chain)</td>
+                                    <td>Analyzing industry operations from raw materials to retail services, and the hierarchy from Industry down to JD.</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>KSA 框架</strong><br>(KSA Framework)</td>
+                                    <td><strong>Knowledge (K):</strong> Theoretical knowledge (e.g., strategy).<br><strong>Skill (S):</strong> Practical application (e.g., internships).<br><strong>Attitude (A):</strong> Proactive mindset (e.g., ownership).</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>產品經理</strong><br>(Product Manager)</td>
+                                    <td>A role integrating all three levels: global insight (See World), cross-departmental coordination (Industry), and acquiring KSAs (Shape Yourself).</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                `
+            },
+            'W3': {
+                title: 'Week 3: Gen AI & Prompting Techniques (C-R-F Model)',
+                content: `
+                    <div class="prose max-w-none text-gray-700">
+                        <p class="mb-4">This week explores the historical development of generative AI (e.g., GPT, diffusion models) and its applications across industries. Students experience hands-on AI tools to develop AI literacy.</p>
+                        
+                        <h4 class="text-lg font-bold text-indigo-700 mb-2">Prompting Techniques: C-R-F Model</h4>
+                        <div class="bg-indigo-50 p-4 rounded-lg border border-indigo-100 mb-4">
+                            <ul class="space-y-3">
+                                <li>
+                                    <span class="font-bold text-indigo-800 block">C - Context / Constraint / Condition (背景/限制/條件)</span>
+                                    <span class="text-sm">Role: Business professor | Audience: Managers | Task: Opening speech (100-120 words)</span>
+                                </li>
+                                <li>
+                                    <span class="font-bold text-indigo-800 block">R - Refine / Relate / Redefine (精煉/關聯/重新定義)</span>
+                                    <span class="text-sm">Add experience: 10 years in industry | Add source: International apparel companies | Redefine: For 1-day workshop</span>
+                                </li>
+                                <li>
+                                    <span class="font-bold text-indigo-800 block">F - Feedback / Focus / Format (反饋/聚焦/格式)</span>
+                                    <span class="text-sm">Ask for clarification | Focus on goals | Format: headings, bullets, tables</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                `
+            },
+            'W4': {
+                title: 'Week 4: LLM Prompting & Human-in-the-Loop',
+                content: `
+                    <div class="prose max-w-none text-gray-700">
+                        <p class="mb-4">To use LLMs like ChatGPT well, we need clear prompts including keywords, target audience, and format. AI is a learning partner, not a replacement for thinking.</p>
+                        
+                        <h4 class="text-lg font-bold text-indigo-700 mb-2">Key Concepts</h4>
+                        <table class="content-table">
+                            <thead><tr><th>中文關鍵字</th><th>English keyword</th><th>Definition</th></tr></thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>提示</strong></td>
+                                    <td>Prompt</td>
+                                    <td>Instruction we give to an AI. (我們給予 AI 的指令。)</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>重點條件</strong></td>
+                                    <td>Bullet points</td>
+                                    <td>A short, clear sentence used to list information in an easy-to-read format. (用於以易讀格式列出資訊的簡短、清晰的句子。)</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>人類介入的決策與策略</strong></td>
+                                    <td>Human-in-the-loop</td>
+                                    <td>Humans stay involved in the AI process—checking, correcting, and making final decisions to avoid depending on AI too much. (人類持續參與 AI 流程—檢查、修正並做出最終決策，以避免過度依賴 AI。)</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>大型語言模型</strong></td>
+                                    <td>LLM (Large Language Model)</td>
+                                    <td>An AI system that understands and generates human language. (一種理解和生成人類語言的 AI 系統。)</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        
+                        <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-200 mt-4">
+                            <h5 class="font-bold text-yellow-800 mb-2">⚠️ Cons of LLMs (LLM 的缺點)</h5>
+                            <ul class="list-disc list-inside text-sm text-yellow-900 space-y-1">
+                                <li><strong>Hallucinations (幻覺):</strong> Making up facts. (編造事實。)</li>
+                                <li><strong>Knowledge Cutoffs (知識截止):</strong> Frozen at training time. (知識停留在訓練時點。)</li>
+                                <li><strong>Bias (偏差):</strong> Reflecting societal biases in training data. (反映訓練數據中的社會偏見。)</li>
+                            </ul>
+                        </div>
+                    </div>
+                `
+            },
+            'W5': {
+                title: 'Week 5: Advanced LLM Prompting & Confidentiality',
+                content: `
+                    <div class="prose max-w-none text-gray-700">
+                        <h4 class="text-lg font-bold text-indigo-700 mb-2">LLM Prompting Tips (LLM 提示技巧)</h4>
+                        <table class="content-table">
+                            <thead><tr><th>Concept/Tip</th><th>Description/Details</th></tr></thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Be Detailed and Specific (詳細且具體)</strong></td>
+                                    <td>Provide sufficient context or background information (e.g., applying for a job, relevant experience) to help the LLM complete the task. Describe the desired task in detail (e.g., "write a paragraph explaining why my background makes me a strong candidate" rather than just "write an email").</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Guide the Model to Think Through Its Answer (引導模型思考)</strong></td>
+                                    <td>If you have a specific process in mind, give clear, step-by-step instructions. For instance, specify sequential steps for brainstorming, rhyming, and adding emojis for a product name.</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Experiment and Iterate (實驗與迭代)</strong></td>
+                                    <td>Prompting is a highly iterative process. Start quickly with a short, less specific prompt. If the result is unsatisfactory, refine the prompt by clarifying instructions (e.g., specifying tone like "professional resume").</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="bg-red-50 p-4 rounded-lg border border-red-200 mt-4">
+                            <h5 class="font-bold text-red-800 mb-2">❗ Caveat: Confidential Information (機密資訊注意事項)</h5>
+                            <p class="text-sm text-red-900">If using highly confidential information, understand how the LLM provider uses or keeps that information confidential before copy-pasting it into the model.</p>
+                        </div>
+                    </div>
+                `
+            },
+            'W6': {
+                title: 'Week 6: PM Core Responsibilities & Product Planning',
+                content: `
+                    <div class="prose max-w-none text-gray-700">
+                        <h4 class="text-lg font-bold text-indigo-700 mb-2">PM Fit in Organization (PM 在組織中的定位)</h4>
+                        <p class="mb-4">The PM role fits at the intersection of <strong>Technology (技術)</strong>, the <strong>Business (商業)</strong>, and <strong>Marketing (行銷)</strong>. They act as a "glue" (粘合劑) between customers, business partners, sales teams, development teams, and executives.</p>
+
+                        <h4 class="text-lg font-bold text-indigo-700 mt-6 mb-2">PM Core Responsibilities (核心職責)</h4>
+                        <ul class="list-disc list-inside space-y-2 mb-6">
+                            <li><strong>Collaboration (協作):</strong> Collaborating with cross-functional teams (e.g., engineering, marketing, sales, executives, development teams). They are responsible for negotiating and merging the needs of different internal customers. Need to be good at communicating the <strong>"why" (為什麼)</strong>.</li>
+                        </ul>
+
+                        <h4 class="text-lg font-bold text-indigo-700 mt-6 mb-2">Product Planning Tools (產品規劃工具)</h4>
+                        <table class="content-table">
+                            <thead><tr><th>Concept</th><th>Definition & Characteristics</th></tr></thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>The Product Roadmap (產品路線圖)</strong></td>
+                                    <td>The overall vision and plan for the product. It includes thinking about what the product is, why it's important, how it will be launched, when it will be launched, and for whom it will be launched.</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Personas (用戶畫像)</strong></td>
+                                    <td>A tool used to build a picture of a typical user of the product. Helps the PM understand the customer's personality and goals to meet their needs. <br><br><strong>Characteristics Include:</strong> Age, location, occupation, goals, dreams, skill level, important features, and factors that would not satisfy them.</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Data Collection (數據收集)</strong></td>
+                                    <td>Data is collected from surveys, focus groups, interviews, and other sources. The PM spends time collecting and analyzing this data to provide product direction.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                `
+            },
+            'W7': {
+                title: 'Week 7: PM Mindset & Decision Making',
+                content: `
+                    <div class="prose max-w-none text-gray-700">
+                        <p class="mb-4">The goal is to help students think not just as executors, but as decision-makers who can analyze data, understand users, and consider business value.</p>
+                        
+                        <div class="grid md:grid-cols-2 gap-4 mb-6">
+                            <div class="bg-white p-4 rounded shadow-sm border border-gray-200">
+                                <h5 class="font-bold text-indigo-600 mb-1">1. Think like a CEO/GM (像 CEO/總經理一樣思考)</h5>
+                                <p class="text-sm">Take ownership. Don't just wait for instructions. Understand users and business value.</p>
+                            </div>
+                            <div class="bg-white p-4 rounded shadow-sm border border-gray-200">
+                                <h5 class="font-bold text-indigo-600 mb-1">2. Critical Thinking (批判性思考)</h5>
+                                <p class="text-sm">Don't Trust, Verify. Check data sources and cross-check results instead of blindly trusting numbers. Critical thinking is the ability to analyze, question, and evaluate information.</p>
+                            </div>
+                            <div class="bg-white p-4 rounded shadow-sm border border-gray-200">
+                                <h5 class="font-bold text-indigo-600 mb-1">3. Business Acumen (商業敏銳度)</h5>
+                                <p class="text-sm">Understand Revenue, Profit, Pricing logic, and Payback months. Feelings alone are not enough; logic and numbers are essential.</p>
+                            </div>
+                            <div class="bg-white p-4 rounded shadow-sm border border-gray-200">
+                                <h5 class="font-bold text-indigo-600 mb-1">4. PM Skills (日常 PM 技能)</h5>
+                                <p class="text-sm">Includes User-centricity (解決用戶需求), Communication (連接各方), Prioritization (資源有限，選擇重點), and Decision-making with limited data (數據不完整時仍需決策).</p>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            'W8': {
+                title: 'Week 8: PM Competencies & NPD Stage-Gate',
+                content: `
+                    <div class="prose max-w-none text-gray-700">
+                        <p class="mb-4">Product management is the bridge between business strategy and product execution.</p>
+
+                        <h4 class="text-lg font-bold text-indigo-700 mb-2">The Integrated Framework (整合架構)</h4>
+                        <ul class="list-disc list-inside mb-4 space-y-1">
+                            <li><strong>NPD Model (新產品開發):</strong> Defines the <em>structure</em> of product creation (Marketing -> Product Dev -> Launch).</li>
+                            <li><strong>PM Competencies (PM 能力):</strong> Define <em>who</em> leads and coordinates within that structure.</li>
+                        </ul>
+
+                        <table class="content-table">
+                            <thead><tr><th>PM Competency Domains</th><th>NPD Stage-Gate Phases (NPD 階段-關卡模型)</th></tr></thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <strong>Business-Oriented (商業導向):</strong><br>Strategy, Portfolio, Market Research<br><br>
+                                        <strong>Technical-Oriented (技術導向):</strong><br>PI Process, Culture & Leadership
+                                    </td>
+                                    <td>
+                                        <strong>Phase 1: Marketing & Feasibility (行銷與可行性)</strong><br>
+                                        (Market research, concept, financial eval)<br><br>
+                                        <strong>Phase 2: Product Development (產品開發)</strong><br>
+                                        (Prototype, verification, tooling)
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <strong>Management-Oriented (管理導向):</strong><br>Culture & Leadership, PI Management
+                                    </td>
+                                    <td>
+                                        <strong>Phase 3: Mass Production & Launch (量產與上市)</strong><br>
+                                        (Pilot runs, QA, Support)
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                `
+            },
+            'W10': {
+                title: 'Week 10: Core Competence & Job Hierarchy',
+                content: `
+                    <div class="prose max-w-none text-gray-700">
+                        <h4 class="text-lg font-bold text-indigo-700 mb-2">What is Competence (素養)?</h4>
+                        <p class="mb-4">
+                            The seamless integration of <strong>Knowledge, Skills, and Attitude (KSA)</strong>. <br>
+                            <span class="text-red-600 font-bold">Attitude (態度)</span> is the "compass" that directs the acquisition of Knowledge and Skills.
+                        </p>
+
+                        <h4 class="text-lg font-bold text-indigo-700 mt-6 mb-2">Job Role Hierarchy (職位層級)</h4>
+                        <table class="content-table">
+                            <thead><tr><th>Level / Role</th><th>Focus</th><th>Key Responsibilities</th></tr></thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Mid-Level / Strategic</strong><br>(e.g., Corp Strategy Manager)</td>
+                                    <td><strong>Decision-making & Strategic Insight</strong></td>
+                                    <td>Analyze industry trends, develop market strategies. (Proactive, decisive attitude)</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Mid-Level / Product</strong><br>(e.g., Global PM)</td>
+                                    <td><strong>Integration & Resource Allocation</strong></td>
+                                    <td>Manage product lifecycle, integrate cross-functional teams (HW/SW/Design).</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Base-Level / Project</strong><br>(e.g., Project Specialist)</td>
+                                    <td><strong>Coordination & Detail Orientation</strong></td>
+                                    <td>Support oriented: Schedule tracking, report consolidation. (Reliable, patient attitude)</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                `
+            }
+        };
+
+        // 新增的專有名詞數據結構 (從上傳的 CPMS_glossary.pdf 整理)
+        const glossaryData = [
+            {
+                category_zh: 'AI / LLM / 生成式 AI (Generative AI)',
+                category_en: 'AI / LLM / Generative AI',
+                terms: [
+                    { zh: '生成式人工智慧', en: 'Generative AI', definition: '依據訓練資料自動產生文字、圖片、音訊等內容的 AI。' },
+                    { zh: 'GPT (語言模型)', en: 'GPT', definition: 'OpenAI 的大型語言模型系列，用於生成文字。' },
+                    { zh: '擴散模型', en: 'Diffusion Models', definition: '目前主流的圖片生成模型，透過逐步去噪生成新圖片。' },
+                    { zh: '大型語言模型', en: 'LLM (Large Language Model)', definition: '能理解與生成自然語言的大型 AI 模型，例如 ChatGPT。' },
+                    { zh: '提示詞', en: 'Prompt', definition: '給 AI 的指令及輸入內容。' },
+                    { zh: 'C-R-F 提示技巧', en: 'C-R-F Model', definition: '包含 Context (情境)、Refine (精煉)、Feedback (回饋)。' },
+                    { zh: '多模態模型', en: 'Multimodal Model', definition: '能同時處理文字與圖像的模型。' },
+                    { zh: '監督式學習', en: 'Supervised Learning', definition: '透過標記資料訓練模型的方式。' },
+                    { zh: '幻覺 (模型捏造)', en: 'Hallucination', definition: 'AI 在沒有事實依據時產生錯誤或虛構內容。' },
+                    { zh: '知識截止', en: 'Knowledge Cutoff', definition: '模型訓練資料的時間限制。' },
+                    { zh: '上下文長度', en: 'Context Length', definition: '模型一次能接收+產出的文字總量限制。' },
+                    { zh: '結構化資料', en: 'Structured Data', definition: '像 Excel、表格格式的資料。' }
+                ]
+            },
+            {
+                category_zh: 'PM 核心職責與規劃',
+                category_en: 'PM Core Responsibilities & Planning',
+                terms: [
+                    { zh: '產品路線圖', en: 'Product Roadmap', definition: '產品的總體願景和計劃，包括思考產品是什麼、為何重要、如何、何時及為誰推出。' },
+                    { zh: '用戶畫像', en: 'Personas', definition: '一種工具，用於描繪典型產品用戶的形象，幫助 PM 了解用戶的個性、目標與需求。' },
+                    { zh: '最小可行產品', en: 'MVP (Minimum Viable Product)', definition: '產品可以發布到市場以收集驗證性學習的最小版本。' },
+                    { zh: '用戶故事', en: 'User Story', definition: '從用戶的角度，對期望功能進行簡短描述。' },
+                    { zh: '產品生命週期', en: 'Product Lifecycle', definition: 'PM 的關鍵管理範圍，涵蓋產品的策略、開發、上市到維護的整個過程。' }
+                ]
+            },
+            {
+                category_zh: '職涯規劃與 KSA 框架',
+                category_en: 'Career Planning & KSA Framework',
+                terms: [
+                    { zh: '看見世界', en: 'See the World', definition: '第一層，需要跳脫個人視角，了解全球趨勢、產業結構與 PESTEL 因素如何影響職涯。' },
+                    { zh: '了解產業', en: 'Understand Industry', definition: '第二層，將職涯路徑視為漏斗：產業 → 企業 → 部門 → 職位 → JD，強調 KSA 框架的建立。' },
+                    { zh: '塑造自己', en: 'Shape Yourself', definition: '第三層，強調運用課程、專案、實習和資源主動打造自身競爭力。' },
+                    { zh: 'KSA 框架', en: 'KSA framework', definition: '個人競爭力三構面：知識 (K)、技能 (S)、態度 (A)。' },
+                    { zh: '知識 (K)', en: 'Knowledge (K)', definition: '理論基礎、框架與概念，用於理解事情本質。' },
+                    { zh: '技能 (S)', en: 'Skill (S)', definition: '執行任務的實作能力，如分析、簡報、跨部門合作。' },
+                    { zh: '態度 (A)', en: 'Attitude (A)', definition: '主動性、負責任、持續學習等內在驅動力，是 KSA 的核心。' },
+                    { zh: '自主學習 (SDL)', en: 'Self-directed Learning (SDL)', definition: '個體自主規劃學習目標並自我管理的學習模式，是塑造自己的核心心態。' },
+                    { zh: '職位描述 (JD)', en: 'Job Description (JD)', definition: '企業對特定職位所需能力 (KSA) 的具體說明文件。' }
+                ]
+            },
+            {
+                category_zh: '職能、職位與層級',
+                category_en: 'Competencies, Roles & Levels',
+                terms: [
+                    { zh: '素養', en: 'Competence (Su Yang)', definition: '能有效、穩定完成任務的整合能力，涵蓋知識、技能與態度。' },
+                    { zh: '企業策略行銷經理', en: 'Corporate Strategy Marketing Manager', definition: '中階/策略管理角色，專注於決策制定與策略洞察，職責包括分析行業趨勢並制定行銷策略。' },
+                    { zh: '全球產品經理', en: 'Global Product Manager (Global PM)', definition: '中階/產品管理角色，專注於整合與資源分配，職責包括管理產品生命週期與整合跨部門團隊。' },
+                    { zh: '專案專員', en: 'Project Specialist (PjM/PCC)', definition: '基層/專案管理角色，優先考量協調與細節導向，工作多為支援性質，如排程追蹤與文件管理。' },
+                    { zh: '決策者', en: 'Decision-makers', definition: '分析資訊、做出選擇並為結果負責的人。' }
+                ]
+            },
+            {
+                category_zh: '決策與思考',
+                category_en: 'Decision Making & Thinking',
+                terms: [
+                    { zh: '批判性思考', en: 'Critical Thinking', definition: '分析、質疑和評估資訊的能力，而不是盲目接受，以做出邏輯和可靠的判斷。' },
+                    { zh: '定價邏輯', en: 'Pricing logic', definition: '決定產品成本的背後推理和策略。' }
+                ]
+            },
+        ];
+
+
+        const langMap = {
+            'zh-TW': {
+                title: "升級！專案管理人員！",
+                btnText: "English",
+                menu: { 'group-intro': '小組介紹', 'learning-zone': '學習專區', 'glossary': '專有名詞字典', 'quiz-area': '測驗區', 'dashboard': '個人介面' },
+                welcome: { title: "歡迎來到 升級！專案管理人員！", msg: "您的專案經理職涯從這裡開始。請從側邊欄選擇一個模組開始。" },
+                sectionTitles: { 'group-intro': '小組介紹', 'learning-zone': '學習專區', 'glossary': '專有名詞字典', 'quiz-area': '測驗區' },
+                toggle: { collapse: "收合", expand: "展開" },
+                group: { title: "Group 2", sub: "成員 (Members)" },
+                dashboard: { id: "用戶 ID", level: "等級", exp: "經驗值", score: "最新測驗分數" }
+            },
+            'en': {
+                title: "Level-Up! PM people!",
+                btnText: "繁體中文",
+                menu: { 'group-intro': 'Group Intro', 'learning-zone': 'Learning Zone', 'glossary': 'Glossary', 'quiz-area': 'Quiz Area', 'dashboard': 'Dashboard' },
+                welcome: { title: "Welcome to Level-Up! PM people!", msg: "Your journey to becoming a professional Product Manager starts here. Select a module from the sidebar to begin." },
+                sectionTitles: { 'group-intro': 'Group Introduction', 'learning-zone': 'Learning Zone', 'glossary': 'Terminology Dictionary', 'quiz-area': 'Quiz Area' },
+                toggle: { collapse: "Collapse", expand: "Expand" },
+                group: { title: "Group 2", sub: "Members" },
+                dashboard: { id: "User ID", level: "Level", exp: "EXP", score: "Latest Score" }
+            }
+        };
+
+        // --- 核心邏輯 (App Logic) ---
+
+        let currentLang = 'zh-TW';
+        let currentTab = 'welcome';
+        let isCollapsed = false;
+
+        // DOM 元素
+        const els = {
+            sidebar: document.getElementById('sidebar'),
+            navList: document.getElementById('nav-list'),
+            contentArea: document.getElementById('content-area'),
+            toggleBtn: document.getElementById('sidebar-toggle'),
+            toggleIcon: document.getElementById('toggle-icon'),
+            langBtn: document.getElementById('lang-toggle'),
+            langText: document.getElementById('current-lang-text'),
+            mainTitle: document.getElementById('main-title'),
+            groupContent: document.getElementById('group-intro-content'),
+            dashContent: document.getElementById('dashboard-content'),
+            learnContainer: document.getElementById('learning-accordion'),
+            glossaryContent: document.getElementById('glossary-content'), // 新增字典內容元素
+            welcome: document.getElementById('welcome')
+        };
+
+        // 初始化
+        function init() {
+            renderNav();
+            renderContent();
+            setupListeners();
+            updateLang();
+        }
+
+        // 渲染導覽列
+        function renderNav() {
+            const menu = langMap[currentLang].menu;
+            const items = [
+                { id: 'group-intro', icon: 'users' },
+                { id: 'learning-zone', icon: 'book-open' },
+                { id: 'glossary', icon: 'book' },
+                { id: 'quiz-area', icon: 'brain-circuit' },
+                { id: 'dashboard', icon: 'layout-dashboard' }
+            ];
+
+            els.navList.innerHTML = items.map(item => `
+                <a href="#" class="nav-link flex items-center px-3 py-2.5 rounded-lg text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 transition-colors ${currentTab === item.id ? 'bg-indigo-50 text-indigo-700 font-medium shadow-sm ring-1 ring-indigo-200' : ''}" data-target="${item.id}">
+                    <i data-lucide="${item.icon}" class="w-5 h-5 flex-shrink-0"></i>
+                    <span class="nav-text ml-3 text-sm">${menu[item.id]}</span>
+                </a>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        // 渲染主要內容區塊
+        function renderContent() {
+            // Group Intro
+            els.groupContent.innerHTML = `
+                <h3 class="text-xl font-semibold mb-4">${langMap[currentLang].group.title}</h3>
+                <h4 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">${langMap[currentLang].group.sub}</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    ${teamMembers.map(m => {
+                        // 處理中文姓名，假設格式為 "EnglishName ChineseName"
+                        const nameParts = m.name_en.split(' ');
+                        const enName = nameParts[0];
+                        const zhName = nameParts.slice(1).join(' ');
+                        return `
+                        <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                            <div class="flex items-center space-x-4 mb-3">
+                                <img src="https://placehold.co/100x100/4F46E5/FFFFFF?text=${m.photo_id}" class="w-12 h-12 rounded-full object-cover ring-2 ring-indigo-100">
+                                <div>
+                                    <div class="font-bold text-gray-900">${enName}</div>
+                                    <div class="text-xs text-gray-500">${zhName}</div>
+                                    <div class="text-xs font-semibold text-indigo-600">${m.info}</div>
+                                </div>
+                            </div>
+                            <a href="${m.video}" target="_blank" class="text-xs flex items-center text-blue-600 hover:underline mt-2">
+                                <i data-lucide="youtube" class="w-3 h-3 mr-1"></i> ${enName}_DID link
+                            </a>
+                        </div>
+                    `}).join('')}
+                </div>
+            `;
+
+            // Dashboard
+            const dashTxt = langMap[currentLang].dashboard;
+            const progress = Math.min(100, (userData.exp / userData.nextExp) * 100);
+            els.dashContent.innerHTML = `
+                <h2 class="text-3xl font-bold mb-8 text-indigo-700 pb-2 border-b border-gray-200" data-section-title="dashboard">${langMap[currentLang].menu['dashboard']}</h2>
+                <div class="bg-white rounded-2xl shadow-lg border border-indigo-50 overflow-hidden">
+                    <div class="bg-gradient-to-r from-indigo-500 to-purple-600 p-6 text-white flex items-center space-x-4">
+                        <div class="p-3 bg-white/20 rounded-full backdrop-blur-sm">
+                            <i data-lucide="smile" class="w-8 h-8 text-white"></i>
+                        </div>
+                        <div>
+                            <div class="text-xs opacity-80">${dashTxt.id}: ${userData.id}</div>
+                            <div class="text-2xl font-bold">Level ${userData.level}</div>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <div class="flex justify-between text-sm font-medium text-gray-600 mb-2">
+                            <span>${dashTxt.exp}</span>
+                            <span class="text-indigo-600">${userData.exp} / ${userData.nextExp}</span>
+                        </div>
+                        <div class="w-full bg-gray-100 rounded-full h-3 mb-6">
+                            <div class="bg-indigo-600 h-3 rounded-full transition-all duration-1000" style="width: ${progress}%"></div>
+                        </div>
+                        <div class="p-4 bg-green-50 rounded-lg border border-green-100 flex items-center justify-between">
+                            <span class="text-green-800 font-medium">${dashTxt.score}</span>
+                            <span class="text-2xl font-bold text-green-600">${userData.score}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Learning Zone (Accordion)
+            // 將 learningData 的 key 排序
+            const sortedWeeks = ['W1', 'W3', 'W4', 'W5', 'W6', 'W7', 'W8', 'W10'];
+            els.learnContainer.innerHTML = sortedWeeks.map(week => {
+                const item = learningData[week];
+                return `
+                <div class="accordion-item bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden group" data-week="${week}">
+                    <button class="accordion-header w-full text-left p-4 flex justify-between items-center bg-gray-50 hover:bg-gray-100 transition-colors">
+                        <span class="font-bold text-gray-800 text-lg">${item.title}</span>
+                        <i data-lucide="chevron-down" class="w-5 h-5 text-gray-500 transition-transform duration-300"></i>
+                    </button>
+                    <div class="accordion-content-wrapper bg-white">
+                        <div class="accordion-content-inner p-6 border-t border-gray-100">
+                            ${item.content}
+                        </div>
+                    </div>
+                </div>
+            `}).join('');
+            
+            // Glossary Content
+            els.glossaryContent.innerHTML = glossaryData.map(category => `
+                <div class="glossary-category">
+                    <h3 class="text-xl font-bold text-indigo-700 mb-4 pb-1 border-b border-indigo-200">${category.category_zh} <span class="text-base font-normal text-gray-500">(${category.category_en})</span></h3>
+                    <div class="space-y-4">
+                        ${category.terms.map(term => `
+                            <div class="glossary-term-item">
+                                <dt class="text-lg font-bold text-gray-900">${term.zh} <span class="text-sm font-medium text-indigo-600 ml-2">(${term.en})</span></dt>
+                                <dd class="mt-1 text-gray-600">${term.definition}</dd>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+
+            lucide.createIcons();
+            setupAccordion();
+        }
+
+        function setupListeners() {
+            // 側邊欄切換
+            els.toggleBtn.addEventListener('click', () => {
+                isCollapsed = !isCollapsed;
+                els.sidebar.classList.toggle('collapsed', isCollapsed);
+                els.toggleIcon.style.transform = isCollapsed ? 'rotate(180deg)' : '';
+            });
+
+            // 語言切換
+            els.langBtn.addEventListener('click', () => {
+                currentLang = currentLang === 'zh-TW' ? 'en' : 'zh-TW';
+                updateLang();
+            });
+
+            // 導覽點擊 (事件委派)
+            els.navList.addEventListener('click', (e) => {
+                const link = e.target.closest('.nav-link');
+                if (!link) return;
+                e.preventDefault();
+                
+                // 切換 Tab
+                currentTab = link.dataset.target;
+                
+                // UI 更新
+                document.querySelectorAll('.nav-link').forEach(el => {
+                    el.classList.remove('bg-indigo-50', 'text-indigo-700', 'font-medium', 'shadow-sm', 'ring-1', 'ring-indigo-200');
+                    el.classList.add('text-gray-700');
+                });
+                link.classList.add('bg-indigo-50', 'text-indigo-700', 'font-medium', 'shadow-sm', 'ring-1', 'ring-indigo-200');
+                link.classList.remove('text-gray-700');
+
+                // 內容顯示
+                document.querySelectorAll('.content-section').forEach(sec => sec.classList.add('hidden'));
+                const targetSec = document.getElementById(currentTab);
+                if(targetSec) targetSec.classList.remove('hidden');
+                
+                // 如果是 Welcome 頁面，不需要顯示 section
+                if(currentTab === 'welcome') els.welcome.classList.remove('hidden');
+            });
+        }
+
+        function setupAccordion() {
+            const items = document.querySelectorAll('.accordion-item');
+            items.forEach(item => {
+                const header = item.querySelector('.accordion-header');
+                header.addEventListener('click', () => {
+                    const isOpen = item.classList.contains('open');
+                    
+                    // 關閉其他所有
+                    items.forEach(i => {
+                        i.classList.remove('open');
+                        i.querySelector('[data-lucide="chevron-down"]').style.transform = 'rotate(0deg)';
+                    });
+
+                    // 切換當前
+                    if(!isOpen) {
+                        item.classList.add('open');
+                        item.querySelector('[data-lucide="chevron-down"]').style.transform = 'rotate(180deg)';
+                    }
+                });
+            });
+        }
+
+        function updateLang() {
+            const t = langMap[currentLang];
+            els.mainTitle.textContent = t.title;
+            els.langText.textContent = t.btnText;
+            
+            document.querySelector('#welcome-title').textContent = t.welcome.title;
+            document.querySelector('#welcome-message').textContent = t.welcome.msg;
+            
+            // 更新 Section Titles
+            Object.keys(t.sectionTitles).forEach(id => {
+                const el = document.querySelector(`[data-section-title="${id}"]`);
+                if(el) el.textContent = t.sectionTitles[id];
+            });
+
+            renderNav(); // 重繪導覽列以更新文字
+            renderContent(); // 重繪內容以更新 Dashboard/Group 等文字
+        }
+
+        // 啟動
+        init();
+
+    </script>
+</body>
+</html>
