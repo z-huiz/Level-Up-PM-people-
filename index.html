@@ -3,797 +3,1645 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Level-Up! PM people!</title>
-    
-    <!-- 啟用 Tailwind CSS -->
-    <script>
-        window.tailwind = window.tailwind || {}; 
-        tailwind.config = {
-          darkMode: 'class',
-          theme: {
-            extend: {
-                colors: {
-                    pm: {
-                        primary: '#4F46E5', // Indigo 600
-                        secondary: '#4338ca', // Indigo 700
-                        accent: '#F59E0B', // Amber 500
-                    }
-                }
-            },
-          }
-        }
-    </script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Load Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <title>Level Up! PM people - 台式復古版</title>
+    <!-- 引入 Google Fonts: Noto Serif TC (宋體/明體) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700;900&display=swap" rel="stylesheet">
+    <!-- 引入 Remix Icon -->
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
     
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        
-        body { font-family: 'Inter', sans-serif; }
+        /* --- 1. CSS 變數與重置 --- */
+        :root {
+            /* 預設：亮色模式 (Light Mode) */
+            --c-green: #0E4749;    /* 深沈的鐵窗綠 (背景用) */
+            --c-green-light: #4A7C59; 
+            --c-red: #D94F3C;      /* 廟宇磚紅 */
+            --c-yellow: #EDC339;   /* 舊燈泡黃 */
+            --c-beige: #F3EFE0;    /* 米紙色背景 */
+            --c-dark: #2B2B2B;     /* 煤炭黑 */
+            --c-card-bg: #ffffff;  /* 卡片背景 */
+            --c-text: #2B2B2B;     /* 主要文字顏色 */
+            
+            /* 新增：文字強調色 (用於標題、符號) */
+            --c-text-accent: #0E4749; /* 亮色模式下使用深綠 */
+            
+            --border-thick: 3px solid var(--c-dark);
+            --shadow-hard: 6px 6px 0px var(--c-dark);
+            --shadow-sm: 3px 3px 0px var(--c-dark);
+            
+            --sidebar-w: 280px;
+        }
 
-        /* --- 側邊欄收合樣式 --- */
-        #sidebar { transition: width 0.3s ease-in-out; }
-        #sidebar.collapsed { width: 4.5rem; }
-        #sidebar.collapsed .nav-text { display: none; }
-        #sidebar.collapsed .nav-link { justify-content: center; }
-        #sidebar.collapsed #sidebar-header { justify-content: center; }
-        #sidebar.collapsed #sidebar-header h2 { display: none; }
+        /* 深色模式 (Dark Mode) 變數覆蓋 */
+        [data-theme="dark"] {
+            --c-green: #052628;    /* 更深的綠 (Sidebar背景) */
+            --c-green-light: #2c5e3d; 
+            --c-red: #ff6b5b;      /* 霓虹紅 */
+            --c-yellow: #f8d664;   /* 亮黃 */
+            --c-beige: #1a1a1a;    /* 深灰背景 */
+            --c-dark: #e0e0e0;     /* 淺色線條/文字 */
+            --c-card-bg: #2d2d2d;  /* 深色卡片 */
+            --c-text: #e0e0e0;     /* 淺色文字 */
+            
+            /* 新增：深色模式下的文字強調色改為亮薄荷綠，確保可讀性 */
+            --c-text-accent: #76c7c0; 
+            
+            /* 陰影顏色需調整，否則在深色背景看不見 */
+            --shadow-hard: 6px 6px 0px #000000;
+            --shadow-sm: 3px 3px 0px #000000;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Noto Serif TC', serif;
+            background-color: var(--c-beige);
+            color: var(--c-text);
+            /* 模擬磨石子地板的雜點背景 */
+            background-image: 
+                radial-gradient(var(--c-green-light) 0.5px, transparent 0.5px), 
+                radial-gradient(var(--c-red) 0.5px, transparent 0.5px); /* Dark mode 下透明度要調整 */
+            background-size: 20px 20px;
+            background-position: 0 0, 10px 10px;
+            height: 100vh;
+            display: flex;
+            overflow: hidden; 
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        /* --- 2. 側邊欄 (Sidebar) --- */
+        .sidebar {
+            width: var(--sidebar-w);
+            background-color: var(--c-green);
+            color: #F3EFE0; /* 側邊欄文字固定淺色 */
+            display: flex;
+            flex-direction: column;
+            border-right: var(--border-thick);
+            position: relative;
+            z-index: 10;
+            overflow-y: auto;
+            /* 裝飾線條 */
+            background-image: linear-gradient(45deg, rgba(0,0,0,0.1) 25%, transparent 25%, transparent 50%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.1) 75%, transparent 75%, transparent);
+            background-size: 40px 40px;
+            transition: background-color 0.3s ease;
+        }
+
+        .logo-box {
+            padding: 2rem 1rem;
+            text-align: center;
+            background: var(--c-red);
+            border-bottom: var(--border-thick);
+            position: relative;
+            transition: background-color 0.3s ease;
+        }
+
+        /* 裝飾框線，像春聯或招牌 */
+        .logo-box::after {
+            content: "";
+            position: absolute;
+            top: 10px; left: 10px; right: 10px; bottom: 10px;
+            border: 2px dashed var(--c-yellow);
+            pointer-events: none;
+        }
+
+        .logo-title {
+            font-size: 2rem;
+            font-weight: 900;
+            color: var(--c-yellow);
+            text-shadow: 3px 3px 0 #000;
+            line-height: 1.2;
+            transform: skew(-5deg); 
+        }
+
+        .nav-menu {
+            list-style: none;
+            padding: 2rem 1rem;
+            flex: 1;
+        }
+
+        .nav-item {
+            margin-bottom: 1.2rem;
+        }
+
+        .nav-btn {
+            width: 100%;
+            padding: 1rem;
+            background: transparent;
+            border: 2px solid rgba(255,255,255,0.2);
+            color: #F3EFE0;
+            font-family: inherit;
+            font-size: 1.1rem;
+            font-weight: 700;
+            text-align: left;
+            cursor: pointer;
+            transition: 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            align-items: center;
+            position: relative;
+        }
+
+        .nav-btn i {
+            margin-right: 12px;
+            font-size: 1.4rem;
+        }
+
+        /* 懸停與選中狀態 */
+        .nav-btn:hover, .nav-btn.active {
+            background-color: var(--c-yellow);
+            color: #2B2B2B; /* 按鈕選中時文字變黑 */
+            border-color: #2B2B2B;
+            box-shadow: 4px 4px 0 #000; 
+            transform: translate(-2px, -2px);
+        }
+
+        .nav-btn.active::after {
+            content: "◄";
+            position: absolute;
+            right: 10px;
+            font-size: 0.8rem;
+        }
+
+        /* 設定區塊 (深色/語言切換) */
+        .settings-panel {
+            padding: 1.5rem;
+            border-top: 1px dashed rgba(255,255,255,0.3);
+            display: flex;
+            gap: 10px;
+            flex-direction: column;
+        }
+
+        .setting-btn {
+            background: rgba(0,0,0,0.2);
+            border: 1px solid rgba(255,255,255,0.4);
+            color: #fff;
+            padding: 8px;
+            cursor: pointer;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+        .setting-btn:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .sidebar-footer {
+            padding: 1rem;
+            text-align: center;
+            font-size: 0.8rem;
+            opacity: 0.6;
+        }
+
+        /* --- 3. 主要內容區 (Main) --- */
+        .main-container {
+            flex: 1;
+            padding: 2rem 3rem;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        /* 頂部裝飾條 */
+        .main-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 3rem;
+            /* 修正：將邊框顏色改為 accent color，確保深色模式可見 */
+            border-bottom: 4px double var(--c-text-accent);
+            padding-bottom: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .page-heading {
+            font-size: 2.5rem;
+            font-weight: 900;
+            /* 修正：將標題顏色改為 accent color，確保深色模式可見 */
+            color: var(--c-text-accent);
+            position: relative;
+            transition: color 0.3s ease;
+        }
         
-        /* --- 穩健的 Accordion 動畫 (Grid Method) --- */
-        .accordion-content-wrapper {
+        .page-heading::before {
+            content: "";
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            background: var(--c-red);
+            border-radius: 50%;
+            margin-right: 10px;
+            border: 2px solid var(--c-dark);
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: bold;
+            background: var(--c-card-bg);
+            padding: 5px 15px;
+            border: 2px solid var(--c-dark);
+            box-shadow: 3px 3px 0 rgba(0,0,0,0.2);
+            border-radius: 50px;
+            color: var(--c-text);
+            transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+        }
+
+        /* --- 4. 內容區塊 (Sections) --- */
+        .section-content {
+            display: none; 
+            animation: fadeIn 0.5s ease;
+        }
+        .section-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 卡片樣式 */
+        .retro-card {
+            background: var(--c-card-bg);
+            border: var(--border-thick);
+            box-shadow: var(--shadow-hard);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            position: relative;
+            color: var(--c-text);
+            transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        
+        /* Learning Zone & Glossary 卡片互動效果 */
+        .interactive-card {
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .interactive-card:active {
+            transform: scale(0.98);
+            box-shadow: 2px 2px 0 var(--c-dark);
+        }
+        
+        .retro-card::before {
+            content: "";
+            position: absolute;
+            top: -3px; right: -3px;
+            width: 0; 
+            height: 0; 
+            border-left: 30px solid transparent;
+            border-right: 30px solid var(--c-red);
+            border-bottom: 30px solid transparent;
+            border-top: 30px solid var(--c-red);
+            transition: border-color 0.3s ease;
+        }
+
+        .card-title {
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+            color: var(--c-red);
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            transition: color 0.3s ease;
+        }
+        .card-title i { margin-right: 10px; }
+
+        /* 學習區的列表樣式 */
+        .learning-list {
+            list-style: none;
+            margin-top: 10px;
+            margin-bottom: 15px;
+        }
+        .learning-list li {
+            margin-bottom: 8px;
+            padding-left: 15px;
+            position: relative;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+        .learning-list li::before {
+            content: "➢";
+            position: absolute;
+            left: 0;
+            /* 修正：使用自適應的強調色，確保深色模式可見 */
+            color: var(--c-text-accent); 
+            font-size: 0.8rem;
+        }
+
+        .grid-layout {
             display: grid;
-            grid-template-rows: 0fr;
-            transition: grid-template-rows 0.3s ease-out;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
         }
-        .accordion-item.open .accordion-content-wrapper {
-            grid-template-rows: 1fr;
+        
+        /* Glossary Grid 調整 (比較密集一點) */
+        .glossary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
         }
-        .accordion-content-inner {
+
+        /* Team Member Avatar */
+        .avatar-circle {
+            width: 80px;
+            height: 80px;
+            background-color: var(--c-yellow);
+            border: 2px solid var(--c-dark);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: #2B2B2B; /* Avatar 文字保持黑色 */
+            transition: border-color 0.3s ease;
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 4px 12px;
+            background: var(--c-green);
+            color: #fff;
+            font-size: 0.8rem;
+            margin-right: 5px;
+            margin-bottom: 5px;
+            border-radius: 4px;
+        }
+        
+        /* 不同的 tag 顏色 */
+        .tag.tag-ai { background: #6b4c9a; }
+        .tag.tag-pm { background: #d94f3c; }
+        .tag.tag-dev { background: #4a7c59; }
+        .tag.tag-concept { background: #E6A23C; } /* 新增：概念類 Tag */
+
+        .quiz-option {
+            display: block;
+            width: 100%;
+            padding: 1rem;
+            margin-bottom: 10px;
+            border: 2px solid var(--c-dark);
+            background: var(--c-card-bg);
+            color: var(--c-text);
+            cursor: pointer;
+            text-align: left;
+            font-size: 1rem;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+        .quiz-option:hover {
+            background-color: var(--c-yellow);
+            color: #2B2B2B;
+            box-shadow: 2px 2px 0 var(--c-dark);
+        }
+
+        .quiz-option.disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        /* Progress Bar */
+        .progress-container { margin-top: 20px; }
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .progress-track {
+            height: 20px;
+            background: rgba(0,0,0,0.1); /* 在深色模式下稍微可見 */
+            border: 2px solid var(--c-dark);
+            border-radius: 10px;
             overflow: hidden;
         }
+        [data-theme="dark"] .progress-track { background: rgba(255,255,255,0.1); }
+        
+        .progress-bar {
+            height: 100%;
+            background: repeating-linear-gradient(
+                45deg,
+                var(--c-green),
+                var(--c-green) 10px,
+                var(--c-green-light) 10px,
+                var(--c-green-light) 10px,
+                var(--c-green-light) 20px
+            );
+            width: 0%; 
+            transition: width 1s ease;
+        }
+        
+        /* Quiz Button Styles */
+        .btn-retro-action {
+            display: inline-block;
+            padding: 10px 25px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #fff;
+            background-color: var(--c-green);
+            border: 3px solid var(--c-dark);
+            cursor: pointer;
+            box-shadow: 4px 4px 0 var(--c-dark);
+            transition: all 0.2s;
+            margin-top: 20px;
+        }
+        .btn-retro-action:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0 var(--c-dark);
+            background-color: var(--c-green-light);
+        }
+        .btn-retro-action:active {
+            transform: translate(2px, 2px);
+            box-shadow: 1px 1px 0 var(--c-dark);
+        }
+        
+        /* 座右銘牆樣式 */
+        .motto-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+        }
+        .motto-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border: 2px dashed var(--c-dark);
+            background: rgba(0,0,0,0.02);
+            transition: all 0.2s;
+        }
+        .motto-item:hover {
+            background: var(--c-yellow);
+            color: #2B2B2B; /* 確保懸停時文字變黑 */
+            border-style: solid;
+            transform: translateY(-2px);
+            box-shadow: 3px 3px 0 var(--c-dark);
+        }
+        /* 當懸停時，強制子元素顏色變黑 */
+        .motto-item:hover strong, 
+        .motto-item:hover small {
+            color: #2B2B2B !important;
+        }
 
-        /* 表格樣式 */
-        .content-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 1rem;
-            margin-bottom: 1rem;
-            font-size: 0.95rem;
+        .motto-icon {
+            font-size: 2rem;
+            margin-right: 15px;
         }
-        .content-table th {
-            background-color: #EEF2FF; /* Indigo 50 */
-            color: #3730A3; /* Indigo 800 */
-            font-weight: 600;
-            text-align: left;
-            padding: 0.75rem;
-            border-bottom: 2px solid #E0E7FF;
+        .motto-text {
+            display: flex;
+            flex-direction: column;
         }
-        .content-table td {
-            padding: 0.75rem;
-            border-bottom: 1px solid #E5E7EB;
-            color: #374151; /* Gray 700 */
-            vertical-align: top;
+        .motto-text strong {
+            font-size: 1.1rem;
+            color: var(--c-text-accent); /* 支援深色模式 */
+            margin-bottom: 2px;
         }
-        .content-table tr:last-child td { border-bottom: none; }
+        .motto-text small {
+            font-size: 0.85rem;
+            color: var(--c-text);
+            opacity: 0.8;
+            font-style: italic;
+        }
+        
+        /* 活躍度圖表樣式 */
+        .activity-graph {
+            display: flex; 
+            align-items: flex-end; 
+            height: 150px; 
+            gap: 10px; 
+            padding-top: 20px;
+        }
+        .activity-bar {
+            flex:1; 
+            background: var(--c-yellow); 
+            border: 2px solid var(--c-dark);
+            transition: height 0.3s ease;
+        }
+        .activity-bar.today {
+            background: var(--c-red); 
+            position: relative;
+        }
+        .activity-bar.empty {
+            background: #ddd;
+        }
+        [data-theme="dark"] .activity-bar.empty {
+            background: #444;
+        }
+        .activity-label {
+            position: absolute; 
+            top: -25px; 
+            left: 0; 
+            right: 0; 
+            text-align: center; 
+            font-size: 0.8rem; 
+            font-weight: bold;
+            color: var(--c-text-accent);
+        }
 
-        /* 字典樣式 */
-        .glossary-category {
-            @apply border-t pt-6 mt-6 first:border-t-0 first:pt-0 first:mt-0;
-        }
-        .glossary-term-item {
-             @apply mt-4 pt-4 border-t border-gray-100 first:mt-0 first:pt-0 first:border-t-0;
+        /* 隱藏區塊 (用於 Quiz 切換) */
+        .d-none { display: none !important; }
+
+        /* --- 5. RWD 手機版 --- */
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+                overflow: auto;
+                height: auto; 
+            }
+            
+            .sidebar {
+                width: 100%;
+                height: auto;
+                border-right: none;
+                border-bottom: var(--border-thick);
+                overflow: visible;
+            }
+
+            .logo-box { padding: 1rem; }
+
+            .nav-menu {
+                display: flex;
+                overflow-x: auto;
+                padding: 10px;
+                gap: 10px;
+                white-space: nowrap;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .nav-item { margin-bottom: 0; flex: 0 0 auto; }
+            .nav-btn { padding: 0.5rem 1rem; font-size: 0.9rem; }
+            .main-container { padding: 1.5rem; }
+            .page-heading { font-size: 1.8rem; }
+            .main-header { flex-direction: column; align-items: flex-start; gap: 1rem; }
+            
+            .settings-panel {
+                flex-direction: row;
+                padding: 10px;
+                justify-content: center;
+            }
         }
     </style>
 </head>
+<body>
 
-<body class="bg-gray-50 text-gray-900 min-h-screen flex flex-col">
-
-    <!-- 頂部導覽列 -->
-    <header class="sticky top-0 z-20 bg-white border-b border-gray-200 shadow-sm">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex justify-between items-center">
-            <h1 id="main-title" class="text-2xl font-extrabold text-indigo-600 tracking-tight">Level-Up! PM people!</h1>
-            <div class="flex items-center gap-3">
-                <button id="lang-toggle" class="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-gray-300 hover:bg-gray-50 text-sm font-medium transition-colors text-gray-700">
-                    <i data-lucide="globe" class="w-4 h-4"></i>
-                    <span id="current-lang-text">繁體中文</span>
-                </button>
-            </div>
+    <!-- 左側導航 Sidebar -->
+    <aside class="sidebar">
+        <div class="logo-box">
+            <h1 class="logo-title">Level Up!<br>PM people</h1>
         </div>
-    </header>
 
-    <div class="flex flex-1 overflow-hidden max-w-7xl mx-auto w-full">
-        <!-- 側邊欄 -->
-        <nav id="sidebar" class="w-64 bg-white border-r border-gray-200 flex flex-col flex-shrink-0">
-            <div class="p-4 border-b border-gray-100 flex justify-between items-center" id="sidebar-header">
-                <h2 class="text-xs font-bold text-gray-400 uppercase tracking-wider">Navigation</h2>
-                <button id="sidebar-toggle" class="p-1 rounded-md hover:bg-gray-100 text-gray-500 transition-transform">
-                    <i id="toggle-icon" data-lucide="chevrons-left" class="w-5 h-5"></i>
+        <ul class="nav-menu">
+            <li class="nav-item">
+                <button class="nav-btn active" onclick="switchTab('group-intro', this)">
+                    <i class="ri-team-line"></i> <span data-i18n="menu-intro">Group Intro</span>
                 </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-btn" onclick="switchTab('learning-zone', this)">
+                    <i class="ri-book-read-line"></i> <span data-i18n="menu-learning">Learning Zone</span>
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-btn" onclick="switchTab('glossary', this)">
+                    <i class="ri-book-mark-line"></i> <span data-i18n="menu-glossary">Glossary</span>
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-btn" onclick="switchTab('quiz-area', this)">
+                    <i class="ri-questionnaire-line"></i> <span data-i18n="menu-quiz">Quiz Area</span>
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-btn" onclick="switchTab('dashboard', this)">
+                    <i class="ri-dashboard-line"></i> <span data-i18n="menu-dashboard">Dashboard</span>
+                </button>
+            </li>
+        </ul>
+
+        <div class="settings-panel">
+            <button class="setting-btn" id="theme-btn" onclick="toggleTheme()">
+                <i class="ri-moon-line"></i> <span data-i18n="btn-theme">深色模式</span>
+            </button>
+            <button class="setting-btn" id="lang-btn" onclick="toggleLanguage()">
+                <i class="ri-translate"></i> <span id="lang-label">English</span>
+            </button>
+        </div>
+
+        <div class="sidebar-footer">
+            &copy; 2025 PM Retro Studio
+        </div>
+    </aside>
+
+    <!-- 右側主要內容 Main -->
+    <main class="main-container">
+        
+        <!-- 頭部 Header -->
+        <header class="main-header">
+            <h2 class="page-title page-heading" id="page-title" data-i18n="title-group">Group 2</h2>
+            <div class="user-profile">
+                <i class="ri-user-smile-line"></i> 
+                <span>Admin User</span>
             </div>
+        </header>
+
+        <!-- 1. Group Intro 區塊 -->
+        <section id="group-intro" class="section-content active">
             
-            <div id="nav-list" class="flex-1 overflow-y-auto p-3 space-y-1">
-                <!-- 導覽連結由 JS 生成 -->
+            <!-- 修正：標題顏色改為動態強調色，左邊框也改用強調色 -->
+            <h3 style="font-size: 1.8rem; color: var(--c-red); margin-bottom: 1.5rem; border-left: 5px solid var(--c-text-accent); padding-left: 10px;" data-i18n="subtitle-member">Member</h3>
+
+            <div class="grid-layout">
+                <!-- Laura -->
+                <div class="retro-card" style="text-align: center;">
+                    <div class="avatar-circle" style="margin: 0 auto 1rem;">L</div>
+                    <h3>Laura<br><span data-i18n="name-laura">鄭慧真</span></h3>
+                    <p style="color: var(--c-red); margin-top: 5px; font-weight: bold;">IBS5</p>
+                    <div style="margin-top: 15px;">
+                         <a href="https://www.youtube.com/watch?v=ycQS9Fx_58E" target="_blank" style="display:inline-block; padding: 5px 10px; background: var(--c-dark); color: var(--c-card-bg); text-decoration: none; font-size: 0.9rem; border-radius: 4px;">Laura_DID link</a>
+                    </div>
+                </div>
+                
+                <!-- Jane -->
+                <div class="retro-card" style="text-align: center;">
+                    <div class="avatar-circle" style="margin: 0 auto 1rem; background-color: var(--c-green-light); color: white;">J</div>
+                    <h3>Jane<br><span data-i18n="name-jane">蔡家榛</span></h3>
+                    <p style="color: var(--c-red); margin-top: 5px; font-weight: bold;">ECON4</p>
+                    <div style="margin-top: 15px;">
+                         <a href="https://youtu.be/gjCJ-C87meA?si=p7gLlVU9OXUKOp_J" target="_blank" style="display:inline-block; padding: 5px 10px; background: var(--c-dark); color: var(--c-card-bg); text-decoration: none; font-size: 0.9rem; border-radius: 4px;">Jane_DID link</a>
+                    </div>
+                </div>
+
+                <!-- Sharron -->
+                <div class="retro-card" style="text-align: center;">
+                    <div class="avatar-circle" style="margin: 0 auto 1rem; background-color: var(--c-red); color: white;">S</div>
+                    <h3>Sharron<br><span data-i18n="name-sharron">吳昱侖</span></h3>
+                    <p style="color: var(--c-red); margin-top: 5px; font-weight: bold;">DICE3</p>
+                    <div style="margin-top: 15px;">
+                         <a href="https://youtu.be/BGgHn7wTS7I?si=p7gLlVU9OXUKOp_J" target="_blank" style="display:inline-block; padding: 5px 10px; background: var(--c-dark); color: var(--c-card-bg); text-decoration: none; font-size: 0.9rem; border-radius: 4px;">Sharron_DID link</a>
+                    </div>
+                </div>
+
+                <!-- Ian -->
+                <div class="retro-card" style="text-align: center;">
+                    <div class="avatar-circle" style="margin: 0 auto 1rem; background-color: #fff; color: #2B2B2B; border: 2px solid var(--c-dark);">I</div>
+                    <h3>Ian<br><span data-i18n="name-ian">吳秉益</span></h3>
+                    <p style="color: var(--c-red); margin-top: 5px; font-weight: bold;">IPCM1</p>
+                    <div style="margin-top: 15px;">
+                         <a href="https://www.youtube.com/shorts/WXl6pFT-t_I" target="_blank" style="display:inline-block; padding: 5px 10px; background: var(--c-dark); color: var(--c-card-bg); text-decoration: none; font-size: 0.9rem; border-radius: 4px;">Ian_DID link</a>
+                    </div>
+                </div>
             </div>
-        </nav>
 
-        <!-- 主內容區 -->
-        <main id="content-area" class="flex-1 overflow-y-auto p-6 md:p-10 relative">
-            
-            <!-- 1. 歡迎頁面 -->
-            <section id="welcome" class="content-section active text-center py-16">
-                <div class="inline-flex items-center justify-center p-4 bg-indigo-50 rounded-full mb-6">
-                    <i data-lucide="rocket" class="w-12 h-12 text-indigo-600"></i>
-                </div>
-                <h2 class="text-4xl font-extrabold text-gray-900 mb-4" id="welcome-title">Welcome to Level-Up! PM people!</h2>
-                <p class="text-xl text-gray-600 max-w-2xl mx-auto" id="welcome-message">
-                    Your journey to becoming a professional Product Manager starts here. Select a module from the sidebar to begin.
-                </p>
-            </section>
+            <!-- 新增：團隊協作區塊 -->
+            <h3 style="font-size: 1.8rem; color: var(--c-red); margin-top: 3rem; margin-bottom: 1.5rem; border-left: 5px solid var(--c-text-accent); padding-left: 10px;" data-i18n="subtitle-collab">Team Collaboration</h3>
+            <div class="retro-card">
+                <ul class="learning-list">
+                    <li><strong data-i18n="collab-1">Everyone contributed to collecting and organizing data.</strong></li>
+                    <li><strong data-i18n="collab-2">Laura mainly built the webpage.</strong></li>
+                </ul>
+            </div>
+        </section>
 
-            <!-- 2. 小組介紹 -->
-            <section id="group-intro" class="content-section hidden">
-                <h2 class="text-3xl font-bold mb-8 text-indigo-700 pb-2 border-b border-gray-200" data-section-title="group-intro">Group Introduction</h2>
-                <div id="group-intro-content"></div>
-            </section>
-
-            <!-- 3. 學習專區 (核心修正) -->
-            <section id="learning-zone" class="content-section hidden">
-                <h2 class="text-3xl font-bold mb-8 text-indigo-700 pb-2 border-b border-gray-200" data-section-title="learning-zone">Learning Zone</h2>
-                <div id="learning-accordion" class="space-y-4 max-w-4xl mx-auto"></div>
-            </section>
-
-            <!-- 4. 專有名詞字典 -->
-            <section id="glossary" class="content-section hidden">
-                <h2 class="text-3xl font-bold mb-8 text-indigo-700 pb-2 border-b border-gray-200" data-section-title="glossary">Terminology Dictionary</h2>
-                <div id="glossary-content" class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                    <!-- 字典內容將由 JS 渲染 -->
-                </div>
-            </section>
-
-            <!-- 5. 測驗區 -->
-            <section id="quiz-area" class="content-section hidden">
-                <h2 class="text-3xl font-bold mb-8 text-indigo-700 pb-2 border-b border-gray-200" data-section-title="quiz-area">Quiz Area</h2>
-                <div class="bg-indigo-50 rounded-xl p-8 text-center border border-indigo-100">
-                    <i data-lucide="brain-circuit" class="w-16 h-16 text-indigo-500 mx-auto mb-4"></i>
-                    <h3 class="text-xl font-bold text-gray-900 mb-2">Ready to test your knowledge?</h3>
-                    <p class="text-gray-600 mb-6">Take a quick quiz to evaluate your understanding of this week's topics.</p>
-                    <button class="bg-indigo-600 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200">
-                        Start Quiz
-                    </button>
-                </div>
-            </section>
-
-            <!-- 6. 個人介面 -->
-            <section id="dashboard" class="content-section hidden">
-                <div id="dashboard-content"></div>
-            </section>
-        </main>
-    </div>
-
-    <!-- JavaScript 邏輯 -->
-    <script>
-        // --- 數據定義 (Data Definitions) ---
-
-        // 小組成員
-        const teamMembers = [
-            { name_en: 'Laura 鄭慧真', name_zh: 'Laura 鄭慧真', info: 'IBS5', photo_id: 1, video: 'https://youtu.be/ycQS9Fx_58E?si=-AkhtL6ulQeBHZ9E' },
-            { name_en: 'Jane 蔡家榛', name_zh: 'Jane 蔡家榛', info: 'ECON4', photo_id: 2, video: 'https://youtu.be/gjCJ-C87meA?si=p7gLlVU9OXUKOp_J' },
-            { name_en: 'Sharron 吳昱侖', name_zh: 'Sharron 吳昱侖', info: 'DICE3', photo_id: 3, video: 'https://youtu.be/BGgHn7wTS7I?si=fEAq4ZEgZeAcU_Aj' },
-            { name_en: 'Ian 吳秉益', name_zh: 'Ian 吳秉益', info: 'IPCM1', photo_id: 4, video: 'https://www.youtube.com/shorts/WXl6pFT-t_I' },
-        ];
-
-        // 個人資料
-        const userData = { id: 'LVUP-P007', level: 1, exp: 45, nextExp: 100, score: 88 };
-
-        // 學習專區完整內容 (來自您的檔案)
-        const learningData = {
-            'W1': {
-                title: 'Week 1: See the World, Understand Industry, Shape Yourself',
-                content: `
-                    <div class="prose max-w-none text-gray-700">
-                        <h4 class="text-lg font-bold text-indigo-700 mb-2">Three-level Approach to Career Planning</h4>
-                        <p class="mb-4">
-                            <strong>1. See the World:</strong> Recognize that personal growth is actively shaped by a large, interconnected ecosystem, including university resources, industry structures, and major global forces. These are often identified using the <strong>PESTEL framework</strong> (Political, Economic, Social, Technological, Environmental, Legal).
-                        </p>
-                        <p class="mb-4">
-                            <strong>2. Understand Industry:</strong> Zoom in to examine the professional world's structure. The path is structured like a funnel: <em>Industry → Companies → Departments → Positions → Job Description (JD)</em>. To qualify, one must develop the <strong>KSA framework</strong>: Knowledge (Theory), Skill (Hands-on), and Attitude (Mindset).
-                        </p>
-                        <p class="mb-4">
-                            <strong>3. Shape Yourself:</strong> Take full ownership of your development (Self-Directed Learning), using university resources to build your unique KSA profile.
-                        </p>
-                        
-                        <h4 class="text-lg font-bold text-indigo-700 mt-6 mb-2">Key Concepts & Definitions</h4>
-                        <table class="content-table">
-                            <thead><tr><th>Keyword</th><th>Definition</th></tr></thead>
-                            <tbody>
-                                <tr>
-                                    <td><strong>三層次架構</strong><br>(Three-level framework)</td>
-                                    <td>A systematic "map" to help students locate, plan, and connect university learning with future career aspirations.</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>看見世界</strong><br>(See the World)</td>
-                                    <td>Recognizing personal growth is shaped by a large ecosystem, global trends, and PESTEL factors.</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>了解產業價值鏈</strong><br>(Understand Industry Value Chain)</td>
-                                    <td>Analyzing industry operations from raw materials to retail services, and the hierarchy from Industry down to JD.</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>KSA 框架</strong><br>(KSA Framework)</td>
-                                    <td><strong>Knowledge (K):</strong> Theoretical knowledge (e.g., strategy).<br><strong>Skill (S):</strong> Practical application (e.g., internships).<br><strong>Attitude (A):</strong> Proactive mindset (e.g., ownership).</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>產品經理</strong><br>(Product Manager)</td>
-                                    <td>A role integrating all three levels: global insight (See World), cross-departmental coordination (Industry), and acquiring KSAs (Shape Yourself).</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                `
-            },
-            'W3': {
-                title: 'Week 3: Gen AI & Prompting Techniques (C-R-F Model)',
-                content: `
-                    <div class="prose max-w-none text-gray-700">
-                        <p class="mb-4">This week explores the historical development of generative AI (e.g., GPT, diffusion models) and its applications across industries. Students experience hands-on AI tools to develop AI literacy.</p>
-                        
-                        <h4 class="text-lg font-bold text-indigo-700 mb-2">Prompting Techniques: C-R-F Model</h4>
-                        <div class="bg-indigo-50 p-4 rounded-lg border border-indigo-100 mb-4">
-                            <ul class="space-y-3">
-                                <li>
-                                    <span class="font-bold text-indigo-800 block">C - Context / Constraint / Condition (背景/限制/條件)</span>
-                                    <span class="text-sm">Role: Business professor | Audience: Managers | Task: Opening speech (100-120 words)</span>
-                                </li>
-                                <li>
-                                    <span class="font-bold text-indigo-800 block">R - Refine / Relate / Redefine (精煉/關聯/重新定義)</span>
-                                    <span class="text-sm">Add experience: 10 years in industry | Add source: International apparel companies | Redefine: For 1-day workshop</span>
-                                </li>
-                                <li>
-                                    <span class="font-bold text-indigo-800 block">F - Feedback / Focus / Format (反饋/聚焦/格式)</span>
-                                    <span class="text-sm">Ask for clarification | Focus on goals | Format: headings, bullets, tables</span>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                `
-            },
-            'W4': {
-                title: 'Week 4: LLM Prompting & Human-in-the-Loop',
-                content: `
-                    <div class="prose max-w-none text-gray-700">
-                        <p class="mb-4">To use LLMs like ChatGPT well, we need clear prompts including keywords, target audience, and format. AI is a learning partner, not a replacement for thinking.</p>
-                        
-                        <h4 class="text-lg font-bold text-indigo-700 mb-2">Key Concepts</h4>
-                        <table class="content-table">
-                            <thead><tr><th>中文關鍵字</th><th>English keyword</th><th>Definition</th></tr></thead>
-                            <tbody>
-                                <tr>
-                                    <td><strong>提示</strong></td>
-                                    <td>Prompt</td>
-                                    <td>Instruction we give to an AI. (我們給予 AI 的指令。)</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>重點條件</strong></td>
-                                    <td>Bullet points</td>
-                                    <td>A short, clear sentence used to list information in an easy-to-read format. (用於以易讀格式列出資訊的簡短、清晰的句子。)</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>人類介入的決策與策略</strong></td>
-                                    <td>Human-in-the-loop</td>
-                                    <td>Humans stay involved in the AI process—checking, correcting, and making final decisions to avoid depending on AI too much. (人類持續參與 AI 流程—檢查、修正並做出最終決策，以避免過度依賴 AI。)</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>大型語言模型</strong></td>
-                                    <td>LLM (Large Language Model)</td>
-                                    <td>An AI system that understands and generates human language. (一種理解和生成人類語言的 AI 系統。)</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                        
-                        <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-200 mt-4">
-                            <h5 class="font-bold text-yellow-800 mb-2">⚠️ Cons of LLMs (LLM 的缺點)</h5>
-                            <ul class="list-disc list-inside text-sm text-yellow-900 space-y-1">
-                                <li><strong>Hallucinations (幻覺):</strong> Making up facts. (編造事實。)</li>
-                                <li><strong>Knowledge Cutoffs (知識截止):</strong> Frozen at training time. (知識停留在訓練時點。)</li>
-                                <li><strong>Bias (偏差):</strong> Reflecting societal biases in training data. (反映訓練數據中的社會偏見。)</li>
-                            </ul>
-                        </div>
-                    </div>
-                `
-            },
-            'W5': {
-                title: 'Week 5: Advanced LLM Prompting & Confidentiality',
-                content: `
-                    <div class="prose max-w-none text-gray-700">
-                        <h4 class="text-lg font-bold text-indigo-700 mb-2">LLM Prompting Tips (LLM 提示技巧)</h4>
-                        <table class="content-table">
-                            <thead><tr><th>Concept/Tip</th><th>Description/Details</th></tr></thead>
-                            <tbody>
-                                <tr>
-                                    <td><strong>Be Detailed and Specific (詳細且具體)</strong></td>
-                                    <td>Provide sufficient context or background information (e.g., applying for a job, relevant experience) to help the LLM complete the task. Describe the desired task in detail (e.g., "write a paragraph explaining why my background makes me a strong candidate" rather than just "write an email").</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Guide the Model to Think Through Its Answer (引導模型思考)</strong></td>
-                                    <td>If you have a specific process in mind, give clear, step-by-step instructions. For instance, specify sequential steps for brainstorming, rhyming, and adding emojis for a product name.</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Experiment and Iterate (實驗與迭代)</strong></td>
-                                    <td>Prompting is a highly iterative process. Start quickly with a short, less specific prompt. If the result is unsatisfactory, refine the prompt by clarifying instructions (e.g., specifying tone like "professional resume").</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                        <div class="bg-red-50 p-4 rounded-lg border border-red-200 mt-4">
-                            <h5 class="font-bold text-red-800 mb-2">❗ Caveat: Confidential Information (機密資訊注意事項)</h5>
-                            <p class="text-sm text-red-900">If using highly confidential information, understand how the LLM provider uses or keeps that information confidential before copy-pasting it into the model.</p>
-                        </div>
-                    </div>
-                `
-            },
-            'W6': {
-                title: 'Week 6: PM Core Responsibilities & Product Planning',
-                content: `
-                    <div class="prose max-w-none text-gray-700">
-                        <h4 class="text-lg font-bold text-indigo-700 mb-2">PM Fit in Organization (PM 在組織中的定位)</h4>
-                        <p class="mb-4">The PM role fits at the intersection of <strong>Technology (技術)</strong>, the <strong>Business (商業)</strong>, and <strong>Marketing (行銷)</strong>. They act as a "glue" (粘合劑) between customers, business partners, sales teams, development teams, and executives.</p>
-
-                        <h4 class="text-lg font-bold text-indigo-700 mt-6 mb-2">PM Core Responsibilities (核心職責)</h4>
-                        <ul class="list-disc list-inside space-y-2 mb-6">
-                            <li><strong>Collaboration (協作):</strong> Collaborating with cross-functional teams (e.g., engineering, marketing, sales, executives, development teams). They are responsible for negotiating and merging the needs of different internal customers. Need to be good at communicating the <strong>"why" (為什麼)</strong>.</li>
+        <!-- 2. Learning Zone 區塊 -->
+        <section id="learning-zone" class="section-content">
+            <div class="grid-layout">
+                
+                <!-- Card 1: PM 職涯導航 (Career) -->
+                <div class="retro-card interactive-card" onclick="recordActivity('read')">
+                    <div>
+                        <div class="card-title"><i class="ri-map-pin-line"></i> <span data-i18n="lz-card1-title">PM 職涯導航</span></div>
+                        <p style="margin-bottom: 10px;" data-i18n="lz-card1-desc">從校園到職場的宏觀視野，掌握職涯發展的三個層次與核心能力。</p>
+                        <ul class="learning-list">
+                            <li><strong>3 Levels:</strong> See the World, Understand Industry, Shape Yourself</li>
+                            <li><strong>PESTEL:</strong> <span data-i18n="lz-card1-p1">分析外部宏觀環境</span></li>
+                            <li><strong>KSA 模型:</strong> Knowledge, Skill, Attitude</li>
                         </ul>
-
-                        <h4 class="text-lg font-bold text-indigo-700 mt-6 mb-2">Product Planning Tools (產品規劃工具)</h4>
-                        <table class="content-table">
-                            <thead><tr><th>Concept</th><th>Definition & Characteristics</th></tr></thead>
-                            <tbody>
-                                <tr>
-                                    <td><strong>The Product Roadmap (產品路線圖)</strong></td>
-                                    <td>The overall vision and plan for the product. It includes thinking about what the product is, why it's important, how it will be launched, when it will be launched, and for whom it will be launched.</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Personas (用戶畫像)</strong></td>
-                                    <td>A tool used to build a picture of a typical user of the product. Helps the PM understand the customer's personality and goals to meet their needs. <br><br><strong>Characteristics Include:</strong> Age, location, occupation, goals, dreams, skill level, important features, and factors that would not satisfy them.</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Data Collection (數據收集)</strong></td>
-                                    <td>Data is collected from surveys, focus groups, interviews, and other sources. The PM spends time collecting and analyzing this data to provide product direction.</td>
-                                </tr>
-                            </tbody>
-                        </table>
                     </div>
-                `
-            },
-            'W7': {
-                title: 'Week 7: PM Mindset & Decision Making',
-                content: `
-                    <div class="prose max-w-none text-gray-700">
-                        <p class="mb-4">The goal is to help students think not just as executors, but as decision-makers who can analyze data, understand users, and consider business value.</p>
-                        
-                        <div class="grid md:grid-cols-2 gap-4 mb-6">
-                            <div class="bg-white p-4 rounded shadow-sm border border-gray-200">
-                                <h5 class="font-bold text-indigo-600 mb-1">1. Think like a CEO/GM (像 CEO/總經理一樣思考)</h5>
-                                <p class="text-sm">Take ownership. Don't just wait for instructions. Understand users and business value.</p>
-                            </div>
-                            <div class="bg-white p-4 rounded shadow-sm border border-gray-200">
-                                <h5 class="font-bold text-indigo-600 mb-1">2. Critical Thinking (批判性思考)</h5>
-                                <p class="text-sm">Don't Trust, Verify. Check data sources and cross-check results instead of blindly trusting numbers. Critical thinking is the ability to analyze, question, and evaluate information.</p>
-                            </div>
-                            <div class="bg-white p-4 rounded shadow-sm border border-gray-200">
-                                <h5 class="font-bold text-indigo-600 mb-1">3. Business Acumen (商業敏銳度)</h5>
-                                <p class="text-sm">Understand Revenue, Profit, Pricing logic, and Payback months. Feelings alone are not enough; logic and numbers are essential.</p>
-                            </div>
-                            <div class="bg-white p-4 rounded shadow-sm border border-gray-200">
-                                <h5 class="font-bold text-indigo-600 mb-1">4. PM Skills (日常 PM 技能)</h5>
-                                <p class="text-sm">Includes User-centricity (解決用戶需求), Communication (連接各方), Prioritization (資源有限，選擇重點), and Decision-making with limited data (數據不完整時仍需決策).</p>
-                            </div>
-                        </div>
+                    <div>
+                        <span class="tag">Career</span><span class="tag">Mindset</span>
                     </div>
-                `
-            },
-            'W8': {
-                title: 'Week 8: PM Competencies & NPD Stage-Gate',
-                content: `
-                    <div class="prose max-w-none text-gray-700">
-                        <p class="mb-4">Product management is the bridge between business strategy and product execution.</p>
+                </div>
 
-                        <h4 class="text-lg font-bold text-indigo-700 mb-2">The Integrated Framework (整合架構)</h4>
-                        <ul class="list-disc list-inside mb-4 space-y-1">
-                            <li><strong>NPD Model (新產品開發):</strong> Defines the <em>structure</em> of product creation (Marketing -> Product Dev -> Launch).</li>
-                            <li><strong>PM Competencies (PM 能力):</strong> Define <em>who</em> leads and coordinates within that structure.</li>
+                <!-- Card 2: AI 賦能工作術 (AI Tools) -->
+                <div class="retro-card interactive-card" onclick="recordActivity('read')">
+                    <div>
+                        <div class="card-title"><i class="ri-robot-line"></i> <span data-i18n="lz-card2-title">AI 賦能工作術</span></div>
+                        <p style="margin-bottom: 10px;" data-i18n="lz-card2-desc">掌握生成式 AI 的核心技術與提詞技巧，讓 AI 成為你的最佳副手。</p>
+                        <ul class="learning-list">
+                            <li><strong>Prompting:</strong> C-R-F <span data-i18n="lz-card2-p1">提詞模型</span> (Context, Role, Format)</li>
+                            <li><strong>Human-in-the-loop:</strong> <span data-i18n="lz-card2-p2">人類介入的判斷與驗證</span></li>
+                            <li><strong>Gen AI:</strong> <span data-i18n="lz-card2-p3">擴散模型與影像生成原理</span></li>
                         </ul>
-
-                        <table class="content-table">
-                            <thead><tr><th>PM Competency Domains</th><th>NPD Stage-Gate Phases (NPD 階段-關卡模型)</th></tr></thead>
-                            <tbody>
-                                <tr>
-                                    <td>
-                                        <strong>Business-Oriented (商業導向):</strong><br>Strategy, Portfolio, Market Research<br><br>
-                                        <strong>Technical-Oriented (技術導向):</strong><br>PI Process, Culture & Leadership
-                                    </td>
-                                    <td>
-                                        <strong>Phase 1: Marketing & Feasibility (行銷與可行性)</strong><br>
-                                        (Market research, concept, financial eval)<br><br>
-                                        <strong>Phase 2: Product Development (產品開發)</strong><br>
-                                        (Prototype, verification, tooling)
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <strong>Management-Oriented (管理導向):</strong><br>Culture & Leadership, PI Management
-                                    </td>
-                                    <td>
-                                        <strong>Phase 3: Mass Production & Launch (量產與上市)</strong><br>
-                                        (Pilot runs, QA, Support)
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
                     </div>
-                `
-            },
-            'W10': {
-                title: 'Week 10: Core Competence & Job Hierarchy',
-                content: `
-                    <div class="prose max-w-none text-gray-700">
-                        <h4 class="text-lg font-bold text-indigo-700 mb-2">What is Competence (素養)?</h4>
-                        <p class="mb-4">
-                            The seamless integration of <strong>Knowledge, Skills, and Attitude (KSA)</strong>. <br>
-                            <span class="text-red-600 font-bold">Attitude (態度)</span> is the "compass" that directs the acquisition of Knowledge and Skills.
-                        </p>
-
-                        <h4 class="text-lg font-bold text-indigo-700 mt-6 mb-2">Job Role Hierarchy (職位層級)</h4>
-                        <table class="content-table">
-                            <thead><tr><th>Level / Role</th><th>Focus</th><th>Key Responsibilities</th></tr></thead>
-                            <tbody>
-                                <tr>
-                                    <td><strong>Mid-Level / Strategic</strong><br>(e.g., Corp Strategy Manager)</td>
-                                    <td><strong>Decision-making & Strategic Insight</strong></td>
-                                    <td>Analyze industry trends, develop market strategies. (Proactive, decisive attitude)</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Mid-Level / Product</strong><br>(e.g., Global PM)</td>
-                                    <td><strong>Integration & Resource Allocation</strong></td>
-                                    <td>Manage product lifecycle, integrate cross-functional teams (HW/SW/Design).</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Base-Level / Project</strong><br>(e.g., Project Specialist)</td>
-                                    <td><strong>Coordination & Detail Orientation</strong></td>
-                                    <td>Support oriented: Schedule tracking, report consolidation. (Reliable, patient attitude)</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                `
-            }
-        };
-
-        // 新增的專有名詞數據結構 (從上傳的 CPMS_glossary.pdf 整理)
-        const glossaryData = [
-            {
-                category_zh: 'AI / LLM / 生成式 AI (Generative AI)',
-                category_en: 'AI / LLM / Generative AI',
-                terms: [
-                    { zh: '生成式人工智慧', en: 'Generative AI', definition: '依據訓練資料自動產生文字、圖片、音訊等內容的 AI。' },
-                    { zh: 'GPT (語言模型)', en: 'GPT', definition: 'OpenAI 的大型語言模型系列，用於生成文字。' },
-                    { zh: '擴散模型', en: 'Diffusion Models', definition: '目前主流的圖片生成模型，透過逐步去噪生成新圖片。' },
-                    { zh: '大型語言模型', en: 'LLM (Large Language Model)', definition: '能理解與生成自然語言的大型 AI 模型，例如 ChatGPT。' },
-                    { zh: '提示詞', en: 'Prompt', definition: '給 AI 的指令及輸入內容。' },
-                    { zh: 'C-R-F 提示技巧', en: 'C-R-F Model', definition: '包含 Context (情境)、Refine (精煉)、Feedback (回饋)。' },
-                    { zh: '多模態模型', en: 'Multimodal Model', definition: '能同時處理文字與圖像的模型。' },
-                    { zh: '監督式學習', en: 'Supervised Learning', definition: '透過標記資料訓練模型的方式。' },
-                    { zh: '幻覺 (模型捏造)', en: 'Hallucination', definition: 'AI 在沒有事實依據時產生錯誤或虛構內容。' },
-                    { zh: '知識截止', en: 'Knowledge Cutoff', definition: '模型訓練資料的時間限制。' },
-                    { zh: '上下文長度', en: 'Context Length', definition: '模型一次能接收+產出的文字總量限制。' },
-                    { zh: '結構化資料', en: 'Structured Data', definition: '像 Excel、表格格式的資料。' }
-                ]
-            },
-            {
-                category_zh: 'PM 核心職責與規劃',
-                category_en: 'PM Core Responsibilities & Planning',
-                terms: [
-                    { zh: '產品路線圖', en: 'Product Roadmap', definition: '產品的總體願景和計劃，包括思考產品是什麼、為何重要、如何、何時及為誰推出。' },
-                    { zh: '用戶畫像', en: 'Personas', definition: '一種工具，用於描繪典型產品用戶的形象，幫助 PM 了解用戶的個性、目標與需求。' },
-                    { zh: '最小可行產品', en: 'MVP (Minimum Viable Product)', definition: '產品可以發布到市場以收集驗證性學習的最小版本。' },
-                    { zh: '用戶故事', en: 'User Story', definition: '從用戶的角度，對期望功能進行簡短描述。' },
-                    { zh: '產品生命週期', en: 'Product Lifecycle', definition: 'PM 的關鍵管理範圍，涵蓋產品的策略、開發、上市到維護的整個過程。' }
-                ]
-            },
-            {
-                category_zh: '職涯規劃與 KSA 框架',
-                category_en: 'Career Planning & KSA Framework',
-                terms: [
-                    { zh: '看見世界', en: 'See the World', definition: '第一層，需要跳脫個人視角，了解全球趨勢、產業結構與 PESTEL 因素如何影響職涯。' },
-                    { zh: '了解產業', en: 'Understand Industry', definition: '第二層，將職涯路徑視為漏斗：產業 → 企業 → 部門 → 職位 → JD，強調 KSA 框架的建立。' },
-                    { zh: '塑造自己', en: 'Shape Yourself', definition: '第三層，強調運用課程、專案、實習和資源主動打造自身競爭力。' },
-                    { zh: 'KSA 框架', en: 'KSA framework', definition: '個人競爭力三構面：知識 (K)、技能 (S)、態度 (A)。' },
-                    { zh: '知識 (K)', en: 'Knowledge (K)', definition: '理論基礎、框架與概念，用於理解事情本質。' },
-                    { zh: '技能 (S)', en: 'Skill (S)', definition: '執行任務的實作能力，如分析、簡報、跨部門合作。' },
-                    { zh: '態度 (A)', en: 'Attitude (A)', definition: '主動性、負責任、持續學習等內在驅動力，是 KSA 的核心。' },
-                    { zh: '自主學習 (SDL)', en: 'Self-directed Learning (SDL)', definition: '個體自主規劃學習目標並自我管理的學習模式，是塑造自己的核心心態。' },
-                    { zh: '職位描述 (JD)', en: 'Job Description (JD)', definition: '企業對特定職位所需能力 (KSA) 的具體說明文件。' }
-                ]
-            },
-            {
-                category_zh: '職能、職位與層級',
-                category_en: 'Competencies, Roles & Levels',
-                terms: [
-                    { zh: '素養', en: 'Competence (Su Yang)', definition: '能有效、穩定完成任務的整合能力，涵蓋知識、技能與態度。' },
-                    { zh: '企業策略行銷經理', en: 'Corporate Strategy Marketing Manager', definition: '中階/策略管理角色，專注於決策制定與策略洞察，職責包括分析行業趨勢並制定行銷策略。' },
-                    { zh: '全球產品經理', en: 'Global Product Manager (Global PM)', definition: '中階/產品管理角色，專注於整合與資源分配，職責包括管理產品生命週期與整合跨部門團隊。' },
-                    { zh: '專案專員', en: 'Project Specialist (PjM/PCC)', definition: '基層/專案管理角色，優先考量協調與細節導向，工作多為支援性質，如排程追蹤與文件管理。' },
-                    { zh: '決策者', en: 'Decision-makers', definition: '分析資訊、做出選擇並為結果負責的人。' }
-                ]
-            },
-            {
-                category_zh: '決策與思考',
-                category_en: 'Decision Making & Thinking',
-                terms: [
-                    { zh: '批判性思考', en: 'Critical Thinking', definition: '分析、質疑和評估資訊的能力，而不是盲目接受，以做出邏輯和可靠的判斷。' },
-                    { zh: '定價邏輯', en: 'Pricing logic', definition: '決定產品成本的背後推理和策略。' }
-                ]
-            },
-        ];
-
-
-        const langMap = {
-            'zh-TW': {
-                title: "升級！專案管理人員！",
-                btnText: "English",
-                menu: { 'group-intro': '小組介紹', 'learning-zone': '學習專區', 'glossary': '專有名詞字典', 'quiz-area': '測驗區', 'dashboard': '個人介面' },
-                welcome: { title: "歡迎來到 升級！專案管理人員！", msg: "您的專案經理職涯從這裡開始。請從側邊欄選擇一個模組開始。" },
-                sectionTitles: { 'group-intro': '小組介紹', 'learning-zone': '學習專區', 'glossary': '專有名詞字典', 'quiz-area': '測驗區' },
-                toggle: { collapse: "收合", expand: "展開" },
-                group: { title: "Group 2", sub: "成員 (Members)" },
-                dashboard: { id: "用戶 ID", level: "等級", exp: "經驗值", score: "最新測驗分數" }
-            },
-            'en': {
-                title: "Level-Up! PM people!",
-                btnText: "繁體中文",
-                menu: { 'group-intro': 'Group Intro', 'learning-zone': 'Learning Zone', 'glossary': 'Glossary', 'quiz-area': 'Quiz Area', 'dashboard': 'Dashboard' },
-                welcome: { title: "Welcome to Level-Up! PM people!", msg: "Your journey to becoming a professional Product Manager starts here. Select a module from the sidebar to begin." },
-                sectionTitles: { 'group-intro': 'Group Introduction', 'learning-zone': 'Learning Zone', 'glossary': 'Terminology Dictionary', 'quiz-area': 'Quiz Area' },
-                toggle: { collapse: "Collapse", expand: "Expand" },
-                group: { title: "Group 2", sub: "Members" },
-                dashboard: { id: "User ID", level: "Level", exp: "EXP", score: "Latest Score" }
-            }
-        };
-
-        // --- 核心邏輯 (App Logic) ---
-
-        let currentLang = 'zh-TW';
-        let currentTab = 'welcome';
-        let isCollapsed = false;
-
-        // DOM 元素
-        const els = {
-            sidebar: document.getElementById('sidebar'),
-            navList: document.getElementById('nav-list'),
-            contentArea: document.getElementById('content-area'),
-            toggleBtn: document.getElementById('sidebar-toggle'),
-            toggleIcon: document.getElementById('toggle-icon'),
-            langBtn: document.getElementById('lang-toggle'),
-            langText: document.getElementById('current-lang-text'),
-            mainTitle: document.getElementById('main-title'),
-            groupContent: document.getElementById('group-intro-content'),
-            dashContent: document.getElementById('dashboard-content'),
-            learnContainer: document.getElementById('learning-accordion'),
-            glossaryContent: document.getElementById('glossary-content'), // 新增字典內容元素
-            welcome: document.getElementById('welcome')
-        };
-
-        // 初始化
-        function init() {
-            renderNav();
-            renderContent();
-            setupListeners();
-            updateLang();
-        }
-
-        // 渲染導覽列
-        function renderNav() {
-            const menu = langMap[currentLang].menu;
-            const items = [
-                { id: 'group-intro', icon: 'users' },
-                { id: 'learning-zone', icon: 'book-open' },
-                { id: 'glossary', icon: 'book' },
-                { id: 'quiz-area', icon: 'brain-circuit' },
-                { id: 'dashboard', icon: 'layout-dashboard' }
-            ];
-
-            els.navList.innerHTML = items.map(item => `
-                <a href="#" class="nav-link flex items-center px-3 py-2.5 rounded-lg text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 transition-colors ${currentTab === item.id ? 'bg-indigo-50 text-indigo-700 font-medium shadow-sm ring-1 ring-indigo-200' : ''}" data-target="${item.id}">
-                    <i data-lucide="${item.icon}" class="w-5 h-5 flex-shrink-0"></i>
-                    <span class="nav-text ml-3 text-sm">${menu[item.id]}</span>
-                </a>
-            `).join('');
-            lucide.createIcons();
-        }
-
-        // 渲染主要內容區塊
-        function renderContent() {
-            // Group Intro
-            els.groupContent.innerHTML = `
-                <h3 class="text-xl font-semibold mb-4">${langMap[currentLang].group.title}</h3>
-                <h4 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">${langMap[currentLang].group.sub}</h4>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    ${teamMembers.map(m => {
-                        // 處理中文姓名，假設格式為 "EnglishName ChineseName"
-                        const nameParts = m.name_en.split(' ');
-                        const enName = nameParts[0];
-                        const zhName = nameParts.slice(1).join(' ');
-                        return `
-                        <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-                            <div class="flex items-center space-x-4 mb-3">
-                                <img src="https://placehold.co/100x100/4F46E5/FFFFFF?text=${m.photo_id}" class="w-12 h-12 rounded-full object-cover ring-2 ring-indigo-100">
-                                <div>
-                                    <div class="font-bold text-gray-900">${enName}</div>
-                                    <div class="text-xs text-gray-500">${zhName}</div>
-                                    <div class="text-xs font-semibold text-indigo-600">${m.info}</div>
-                                </div>
-                            </div>
-                            <a href="${m.video}" target="_blank" class="text-xs flex items-center text-blue-600 hover:underline mt-2">
-                                <i data-lucide="youtube" class="w-3 h-3 mr-1"></i> ${enName}_DID link
-                            </a>
-                        </div>
-                    `}).join('')}
-                </div>
-            `;
-
-            // Dashboard
-            const dashTxt = langMap[currentLang].dashboard;
-            const progress = Math.min(100, (userData.exp / userData.nextExp) * 100);
-            els.dashContent.innerHTML = `
-                <h2 class="text-3xl font-bold mb-8 text-indigo-700 pb-2 border-b border-gray-200" data-section-title="dashboard">${langMap[currentLang].menu['dashboard']}</h2>
-                <div class="bg-white rounded-2xl shadow-lg border border-indigo-50 overflow-hidden">
-                    <div class="bg-gradient-to-r from-indigo-500 to-purple-600 p-6 text-white flex items-center space-x-4">
-                        <div class="p-3 bg-white/20 rounded-full backdrop-blur-sm">
-                            <i data-lucide="smile" class="w-8 h-8 text-white"></i>
-                        </div>
-                        <div>
-                            <div class="text-xs opacity-80">${dashTxt.id}: ${userData.id}</div>
-                            <div class="text-2xl font-bold">Level ${userData.level}</div>
-                        </div>
-                    </div>
-                    <div class="p-6">
-                        <div class="flex justify-between text-sm font-medium text-gray-600 mb-2">
-                            <span>${dashTxt.exp}</span>
-                            <span class="text-indigo-600">${userData.exp} / ${userData.nextExp}</span>
-                        </div>
-                        <div class="w-full bg-gray-100 rounded-full h-3 mb-6">
-                            <div class="bg-indigo-600 h-3 rounded-full transition-all duration-1000" style="width: ${progress}%"></div>
-                        </div>
-                        <div class="p-4 bg-green-50 rounded-lg border border-green-100 flex items-center justify-between">
-                            <span class="text-green-800 font-medium">${dashTxt.score}</span>
-                            <span class="text-2xl font-bold text-green-600">${userData.score}</span>
-                        </div>
+                    <div>
+                        <span class="tag">AI</span><span class="tag">Tools</span>
                     </div>
                 </div>
-            `;
 
-            // Learning Zone (Accordion)
-            // 將 learningData 的 key 排序
-            const sortedWeeks = ['W1', 'W3', 'W4', 'W5', 'W6', 'W7', 'W8', 'W10'];
-            els.learnContainer.innerHTML = sortedWeeks.map(week => {
-                const item = learningData[week];
-                return `
-                <div class="accordion-item bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden group" data-week="${week}">
-                    <button class="accordion-header w-full text-left p-4 flex justify-between items-center bg-gray-50 hover:bg-gray-100 transition-colors">
-                        <span class="font-bold text-gray-800 text-lg">${item.title}</span>
-                        <i data-lucide="chevron-down" class="w-5 h-5 text-gray-500 transition-transform duration-300"></i>
-                    </button>
-                    <div class="accordion-content-wrapper bg-white">
-                        <div class="accordion-content-inner p-6 border-t border-gray-100">
-                            ${item.content}
-                        </div>
+                <!-- Card 3: 產品開發流程 (NPD Process) -->
+                <div class="retro-card interactive-card" onclick="recordActivity('read')">
+                    <div>
+                        <div class="card-title"><i class="ri-flow-chart"></i> <span data-i18n="lz-card3-title">產品開發流程管理</span></div>
+                        <p style="margin-bottom: 10px;" data-i18n="lz-card3-desc">解析從概念到上市的標準化流程，以及各階段的關鍵檢核點。</p>
+                        <ul class="learning-list">
+                            <li><strong>NPD Stage-Gate:</strong> <span data-i18n="lz-card3-p1">六階段與三關卡檢核</span></li>
+                            <li><strong><span data-i18n="lz-card3-p2-t">產品生命週期</span>:</strong> <span data-i18n="lz-card3-p2">導入、成長、成熟、衰退</span></li>
+                            <li><strong><span data-i18n="lz-card3-p3-t">PM 核心職能</span>:</strong> <span data-i18n="lz-card3-p3">商業、技術、管理三大面向</span></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <span class="tag">Process</span><span class="tag">Management</span>
                     </div>
                 </div>
-            `}).join('');
-            
-            // Glossary Content
-            els.glossaryContent.innerHTML = glossaryData.map(category => `
-                <div class="glossary-category">
-                    <h3 class="text-xl font-bold text-indigo-700 mb-4 pb-1 border-b border-indigo-200">${category.category_zh} <span class="text-base font-normal text-gray-500">(${category.category_en})</span></h3>
-                    <div class="space-y-4">
-                        ${category.terms.map(term => `
-                            <div class="glossary-term-item">
-                                <dt class="text-lg font-bold text-gray-900">${term.zh} <span class="text-sm font-medium text-indigo-600 ml-2">(${term.en})</span></dt>
-                                <dd class="mt-1 text-gray-600">${term.definition}</dd>
-                            </div>
-                        `).join('')}
+
+                <!-- Card 4: 商業思維與決策 (Business Acumen) -->
+                <div class="retro-card interactive-card" onclick="recordActivity('read')">
+                    <div>
+                        <div class="card-title"><i class="ri-scales-3-line"></i> <span data-i18n="lz-card4-title">商業思維與決策</span></div>
+                        <p style="margin-bottom: 10px;" data-i18n="lz-card4-desc">PM 不只是執行者，更是產品的 CEO。培養以數據為基礎的決策力。</p>
+                        <ul class="learning-list">
+                            <li><strong>CEO Mindset:</strong> <span data-i18n="lz-card4-p1">像總經理一樣思考</span></li>
+                            <li><strong>Critical Thinking:</strong> Don't Trust, Verify (<span data-i18n="lz-card4-p2">驗證資訊</span>)</li>
+                            <li><strong>Business Acumen:</strong> <span data-i18n="lz-card4-p3">定價邏輯與營收分析</span></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <span class="tag">Strategy</span><span class="tag">Decision</span>
                     </div>
                 </div>
-            `).join('');
 
-            lucide.createIcons();
-            setupAccordion();
-        }
+                <!-- Card 5: 使用者洞察與規劃 (User Insight) -->
+                <div class="retro-card interactive-card" onclick="recordActivity('read')">
+                    <div>
+                        <div class="card-title"><i class="ri-user-search-line"></i> <span data-i18n="lz-card5-title">使用者洞察與規劃</span></div>
+                        <p style="margin-bottom: 10px;" data-i18n="lz-card5-desc">深入理解用戶需求，並將其轉化為可執行的產品路徑圖。</p>
+                        <ul class="learning-list">
+                            <li><strong>Personas:</strong> <span data-i18n="lz-card5-p1">建立目標用戶人物誌</span></li>
+                            <li><strong>Roadmap:</strong> <span data-i18n="lz-card5-p2">產品願景與發展藍圖</span></li>
+                            <li><strong>User-Centric:</strong> <span data-i18n="lz-card5-p3">解決真實痛點而非憑空想像</span></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <span class="tag">UX</span><span class="tag">Planning</span>
+                    </div>
+                </div>
 
-        function setupListeners() {
-            // 側邊欄切換
-            els.toggleBtn.addEventListener('click', () => {
-                isCollapsed = !isCollapsed;
-                els.sidebar.classList.toggle('collapsed', isCollapsed);
-                els.toggleIcon.style.transform = isCollapsed ? 'rotate(180deg)' : '';
-            });
+                <!-- Card 6: AI 商業營運應用 (AI Business Ops) -->
+                <div class="retro-card interactive-card" onclick="recordActivity('read')">
+                    <div>
+                        <div class="card-title"><i class="ri-store-3-line"></i> <span data-i18n="lz-card6-title">AI 商業營運應用</span></div>
+                        <p style="margin-bottom: 10px;" data-i18n="lz-card6-desc">運用 AI 工具優化供應鏈管理與零售通路策略，提升營運效率。</p>
+                        <ul class="learning-list">
+                            <li><strong>Supply Chain:</strong> <span data-i18n="lz-card6-p1">需求預測與物流路徑優化</span></li>
+                            <li><strong>Retail:</strong> <span data-i18n="lz-card6-p2">全通路整合 (O2O) 與 ROI 分析</span></li>
+                            <li><strong>Tools:</strong> ChatGPT, Google Sheets AI, Maps API</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <span class="tag">Operations</span><span class="tag">Strategy</span>
+                    </div>
+                </div>
 
-            // 語言切換
-            els.langBtn.addEventListener('click', () => {
-                currentLang = currentLang === 'zh-TW' ? 'en' : 'zh-TW';
-                updateLang();
-            });
+            </div>
+        </section>
 
-            // 導覽點擊 (事件委派)
-            els.navList.addEventListener('click', (e) => {
-                const link = e.target.closest('.nav-link');
-                if (!link) return;
-                e.preventDefault();
+        <!-- 3. Glossary 區塊 -->
+        <section id="glossary" class="section-content">
+            <div class="glossary-grid">
+                <!-- 修正：將所有 Glossary 標題顏色改為 var(--c-text-accent) -->
                 
-                // 切換 Tab
-                currentTab = link.dataset.target;
-                
-                // UI 更新
-                document.querySelectorAll('.nav-link').forEach(el => {
-                    el.classList.remove('bg-indigo-50', 'text-indigo-700', 'font-medium', 'shadow-sm', 'ring-1', 'ring-indigo-200');
-                    el.classList.add('text-gray-700');
-                });
-                link.classList.add('bg-indigo-50', 'text-indigo-700', 'font-medium', 'shadow-sm', 'ring-1', 'ring-indigo-200');
-                link.classList.remove('text-gray-700');
+                <!-- AI / LLM 相關 -->
+                <div class="retro-card interactive-card" onclick="recordActivity('read')">
+                    <span class="tag tag-ai">AI / LLM</span>
+                    <h3 style="color: var(--c-text-accent); font-size: 1.2rem; margin-top: 10px;" data-i18n="term-genai-title">Generative AI (生成式人工智慧)</h3>
+                    <hr style="border: 1px dashed #ccc; margin: 10px 0;">
+                    <p data-i18n="term-genai-desc">依據訓練資料自動產生文字、圖片、音訊等內容的 AI。</p>
+                </div>
 
-                // 內容顯示
-                document.querySelectorAll('.content-section').forEach(sec => sec.classList.add('hidden'));
-                const targetSec = document.getElementById(currentTab);
-                if(targetSec) targetSec.classList.remove('hidden');
-                
-                // 如果是 Welcome 頁面，不需要顯示 section
-                if(currentTab === 'welcome') els.welcome.classList.remove('hidden');
-            });
-        }
+                <div class="retro-card interactive-card" onclick="recordActivity('read')">
+                    <span class="tag tag-ai">AI / LLM</span>
+                    <h3 style="color: var(--c-text-accent); font-size: 1.2rem; margin-top: 10px;" data-i18n="term-llm-title">LLM (大型語言模型)</h3>
+                    <hr style="border: 1px dashed #ccc; margin: 10px 0;">
+                    <p data-i18n="term-llm-desc">能理解與生成自然語言的大型 AI 模型，例如 ChatGPT。</p>
+                </div>
 
-        function setupAccordion() {
-            const items = document.querySelectorAll('.accordion-item');
-            items.forEach(item => {
-                const header = item.querySelector('.accordion-header');
-                header.addEventListener('click', () => {
-                    const isOpen = item.classList.contains('open');
+                <div class="retro-card interactive-card" onclick="recordActivity('read')">
+                    <span class="tag tag-ai">AI / LLM</span>
+                    <h3 style="color: var(--c-text-accent); font-size: 1.2rem; margin-top: 10px;" data-i18n="term-prompt-title">Prompt (提示詞)</h3>
+                    <hr style="border: 1px dashed #ccc; margin: 10px 0;">
+                    <p data-i18n="term-prompt-desc">給 AI 的指令及輸入內容。</p>
+                </div>
+                
+                 <div class="retro-card interactive-card" onclick="recordActivity('read')">
+                    <span class="tag tag-ai">AI / LLM</span>
+                    <h3 style="color: var(--c-text-accent); font-size: 1.2rem; margin-top: 10px;" data-i18n="term-hallucination-title">Hallucination (幻覺)</h3>
+                    <hr style="border: 1px dashed #ccc; margin: 10px 0;">
+                    <p data-i18n="term-hallucination-desc">AI 在沒有事實依據時產生錯誤或虛構內容。</p>
+                </div>
+
+                <!-- 新增：C-R-F Model -->
+                <div class="retro-card interactive-card" onclick="recordActivity('read')">
+                    <span class="tag tag-ai">AI / LLM</span>
+                    <h3 style="color: var(--c-text-accent); font-size: 1.2rem; margin-top: 10px;" data-i18n="term-crf-title">C-R-F Model (C-R-F 提示技巧)</h3>
+                    <hr style="border: 1px dashed #ccc; margin: 10px 0;">
+                    <p data-i18n="term-crf-desc">包含 Context (情境)、Refine (精煉) 與 Feedback (回饋) 的提示詞撰寫技巧。</p>
+                </div>
+
+                <!-- 新增：Human-in-the-loop -->
+                <div class="retro-card interactive-card" onclick="recordActivity('read')">
+                    <span class="tag tag-ai">AI / LLM</span>
+                    <h3 style="color: var(--c-text-accent); font-size: 1.2rem; margin-top: 10px;" data-i18n="term-hitl-title">Human-in-the-loop (人類介入決策)</h3>
+                    <hr style="border: 1px dashed #ccc; margin: 10px 0;">
+                    <p data-i18n="term-hitl-desc">人類持續檢查、修正並對 AI 生成的結果做最終決策，以確保正確性。</p>
+                </div>
+
+                <!-- 新增：Multimodal Model -->
+                <div class="retro-card interactive-card" onclick="recordActivity('read')">
+                    <span class="tag tag-ai">AI / LLM</span>
+                    <h3 style="color: var(--c-text-accent); font-size: 1.2rem; margin-top: 10px;" data-i18n="term-multi-title">Multimodal Model (多模態模型)</h3>
+                    <hr style="border: 1px dashed #ccc; margin: 10px 0;">
+                    <p data-i18n="term-multi-desc">能同時處理文字、圖像等多種格式的模型。</p>
+                </div>
+
+                <!-- Product Management 相關 -->
+                <div class="retro-card interactive-card" onclick="recordActivity('read')">
+                    <span class="tag tag-pm">Product Management</span>
+                    <h3 style="color: var(--c-text-accent); font-size: 1.2rem; margin-top: 10px;" data-i18n="term-roadmap-title">Product Roadmap (產品路線圖)</h3>
+                    <hr style="border: 1px dashed #ccc; margin: 10px 0;">
+                    <p data-i18n="term-roadmap-desc">描述產品方向、優先事項、時間規劃的高層計畫。</p>
+                </div>
+
+                <div class="retro-card interactive-card" onclick="recordActivity('read')">
+                    <span class="tag tag-pm">Product Management</span>
+                    <h3 style="color: var(--c-text-accent); font-size: 1.2rem; margin-top: 10px;" data-i18n="term-user-centric-title">User-centricity (使用者中心)</h3>
+                    <hr style="border: 1px dashed #ccc; margin: 10px 0;">
+                    <p data-i18n="term-user-centric-desc">以顧客需求為核心進行產品設計的思維。</p>
+                </div>
+
+                <div class="retro-card interactive-card" onclick="recordActivity('read')">
+                    <span class="tag tag-pm">Product Management</span>
+                    <h3 style="color: var(--c-text-accent); font-size: 1.2rem; margin-top: 10px;" data-i18n="term-mvp-title">MVP (最小可行性產品)</h3>
+                    <hr style="border: 1px dashed #ccc; margin: 10px 0;">
+                    <p data-i18n="term-mvp-desc">用最低的成本，設計出能滿足核心需求的產品版本，用來測試市場反應。</p>
+                </div>
+
+                <!-- 新增：Persona -->
+                <div class="retro-card interactive-card" onclick="recordActivity('read')">
+                    <span class="tag tag-pm">Product Management</span>
+                    <h3 style="color: var(--c-text-accent); font-size: 1.2rem; margin-top: 10px;" data-i18n="term-persona-title">Persona (使用者角色輪廓)</h3>
+                    <hr style="border: 1px dashed #ccc; margin: 10px 0;">
+                    <p data-i18n="term-persona-desc">模擬典型顧客的背景、需求與行為模式，用於指導產品設計。</p>
+                </div>
+
+                <!-- 新增：CEO/GM Mindset -->
+                <div class="retro-card interactive-card" onclick="recordActivity('read')">
+                    <span class="tag tag-pm">Product Management</span>
+                    <h3 style="color: var(--c-text-accent); font-size: 1.2rem; margin-top: 10px;" data-i18n="term-ceo-title">CEO/GM Mindset (CEO 思維)</h3>
+                    <hr style="border: 1px dashed #ccc; margin: 10px 0;">
+                    <p data-i18n="term-ceo-desc">PM 需像產品的總經理一樣，對產品的成敗負起全責並做出關鍵決策。</p>
+                </div>
+
+                <!-- Product Development / Frameworks -->
+                <div class="retro-card interactive-card" onclick="recordActivity('read')">
+                    <span class="tag tag-dev">Development</span>
+                    <h3 style="color: var(--c-text-accent); font-size: 1.2rem; margin-top: 10px;" data-i18n="term-npd-title">NPD (新產品開發流程)</h3>
+                    <hr style="border: 1px dashed #ccc; margin: 10px 0;">
+                    <p data-i18n="term-npd-desc">從概念到上市的完整產品開發結構流程。</p>
+                </div>
+
+                <div class="retro-card interactive-card" onclick="recordActivity('read')">
+                    <span class="tag tag-dev">Framework</span>
+                    <h3 style="color: var(--c-text-accent); font-size: 1.2rem; margin-top: 10px;" data-i18n="term-ksa-title">KSA Framework (KSA 架構)</h3>
+                    <hr style="border: 1px dashed #ccc; margin: 10px 0;">
+                    <p data-i18n="term-ksa-desc">個人競爭力三構面：知識 (Knowledge)、技能 (Skill)、態度 (Attitude)。</p>
+                </div>
+
+                <!-- 新增：Stage-Gate -->
+                <div class="retro-card interactive-card" onclick="recordActivity('read')">
+                    <span class="tag tag-dev">Development</span>
+                    <h3 style="color: var(--c-text-accent); font-size: 1.2rem; margin-top: 10px;" data-i18n="term-stagegate-title">Stage-Gate Model (階段式關卡)</h3>
+                    <hr style="border: 1px dashed #ccc; margin: 10px 0;">
+                    <p data-i18n="term-stagegate-desc">將開發過程分為數個階段，每個階段結束後需通過審查才能進入下一階段。</p>
+                </div>
+
+                <!-- 新增：Prototype -->
+                <div class="retro-card interactive-card" onclick="recordActivity('read')">
+                    <span class="tag tag-dev">Development</span>
+                    <h3 style="color: var(--c-text-accent); font-size: 1.2rem; margin-top: 10px;" data-i18n="term-prototype-title">Prototype (原型)</h3>
+                    <hr style="border: 1px dashed #ccc; margin: 10px 0;">
+                    <p data-i18n="term-prototype-desc">初步建立的樣品，用來測試產品概念與設計是否可行。</p>
+                </div>
+
+                <!-- 新增：PESTEL -->
+                <div class="retro-card interactive-card" onclick="recordActivity('read')">
+                    <span class="tag tag-concept">Framework</span>
+                    <h3 style="color: var(--c-text-accent); font-size: 1.2rem; margin-top: 10px;" data-i18n="term-pestel-title">PESTEL Factors (PESTEL 因素)</h3>
+                    <hr style="border: 1px dashed #ccc; margin: 10px 0;">
+                    <p data-i18n="term-pestel-desc">分析外部環境的六大面向：政治、經濟、社會、科技、環境、法律。</p>
+                </div>
+
+                <!-- 新增：Three-level framework -->
+                <div class="retro-card interactive-card" onclick="recordActivity('read')">
+                    <span class="tag tag-concept">Framework</span>
+                    <h3 style="color: var(--c-text-accent); font-size: 1.2rem; margin-top: 10px;" data-i18n="term-threelevel-title">Three-level Framework (三層次架構)</h3>
+                    <hr style="border: 1px dashed #ccc; margin: 10px 0;">
+                    <p data-i18n="term-threelevel-desc">連結學習與職涯的系統架構：看見世界、了解產業、塑造自己。</p>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- 4. Quiz Area 區塊 -->
+        <section id="quiz-area" class="section-content">
+            <div class="retro-card" style="max-width: 600px; margin: 0 auto; text-align: center;">
+                <div class="card-title" data-i18n="quiz-title" style="justify-content: center;">PM 與 AI 基礎知識測驗</div>
+                
+                <!-- 1. Start Screen -->
+                <div id="quiz-start-screen">
+                    <div style="font-size: 5rem; color: var(--c-yellow); text-shadow: 2px 2px 0 var(--c-dark); margin: 20px 0;">
+                        <i class="ri-gamepad-line"></i>
+                    </div>
+                    <!-- 修正：已移除 <br> 標籤 -->
+                    <p style="font-size: 1.2rem; margin-bottom: 2rem;" data-i18n="quiz-intro">準備好挑戰了嗎？系統將從題庫隨機抽出 5 題。</p>
+                    <button class="btn-retro-action" onclick="startQuiz()" data-i18n="quiz-btn-start">開始測驗</button>
+                </div>
+
+                <!-- 2. Question Screen -->
+                <div id="quiz-question-screen" class="d-none" style="text-align: left;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-weight: bold; color: var(--c-text-accent);">
+                        <span id="quiz-progress">Question 1/5</span>
+                        <span id="quiz-score-display">Score: 0</span>
+                    </div>
+                    <div style="background: var(--c-beige); border: 2px solid var(--c-dark); padding: 15px; margin-bottom: 20px; font-size: 1.1rem; font-weight: bold; color: var(--c-text);">
+                        <span id="quiz-q-text">題目載入中...</span>
+                    </div>
                     
-                    // 關閉其他所有
-                    items.forEach(i => {
-                        i.classList.remove('open');
-                        i.querySelector('[data-lucide="chevron-down"]').style.transform = 'rotate(0deg)';
-                    });
+                    <div id="quiz-options-container">
+                        <!-- Options will be injected here -->
+                    </div>
 
-                    // 切換當前
-                    if(!isOpen) {
-                        item.classList.add('open');
-                        item.querySelector('[data-lucide="chevron-down"]').style.transform = 'rotate(180deg)';
-                    }
-                });
+                    <div id="quiz-feedback" style="margin-top: 15px; font-weight: bold; min-height: 24px; text-align: center;"></div>
+                    
+                    <div style="text-align: center; margin-top: 20px;">
+                        <button id="quiz-next-btn" class="btn-retro-action d-none" onclick="nextQuestion()">Next Question <i class="ri-arrow-right-line"></i></button>
+                    </div>
+                </div>
+
+                <!-- 3. Result Screen -->
+                <div id="quiz-result-screen" class="d-none">
+                     <div style="font-size: 4rem; color: var(--c-red); margin: 20px 0;">
+                        <i class="ri-trophy-line"></i>
+                    </div>
+                    <h3 style="font-size: 2rem; color: var(--c-text-accent); margin-bottom: 10px;" data-i18n="quiz-completed">測驗完成！</h3>
+                    <p style="font-size: 1.5rem; margin-bottom: 2rem;">
+                        <span data-i18n="quiz-score">你的得分</span>: <span id="quiz-final-score" style="color: var(--c-red); font-weight: 900;">0</span> / 5
+                    </p>
+                    <button class="btn-retro-action" onclick="startQuiz()" data-i18n="quiz-btn-restart">再測一次</button>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- 5. Dashboard 區塊 -->
+        <section id="dashboard" class="section-content">
+            <div class="grid-layout">
+                
+                <!-- 新增：座右銘牆 -->
+                <div class="retro-card" style="grid-column: 1 / -1;">
+                    <div class="card-title"><i class="ri-lightbulb-flash-line"></i> <span data-i18n="dash-motto-title">PM 座右銘</span></div>
+                    <div class="motto-grid">
+                        <div class="motto-item">
+                            <span class="motto-icon">🎯</span>
+                            <div class="motto-text">
+                                <strong data-i18n="motto-1-tw">聚焦一件最重要的事</strong>
+                                <small data-i18n="motto-1-en">Focus on the one most important thing.</small>
+                            </div>
+                        </div>
+                        <div class="motto-item">
+                            <span class="motto-icon">🧭</span>
+                            <div class="motto-text">
+                                <strong data-i18n="motto-2-tw">方向對了，速度才有意義</strong>
+                                <small data-i18n="motto-2-en">Speed only matters when the direction is right.</small>
+                            </div>
+                        </div>
+                        <div class="motto-item">
+                            <span class="motto-icon">👤</span>
+                            <div class="motto-text">
+                                <strong data-i18n="motto-3-tw">先解決用戶的痛，再看指標</strong>
+                                <small data-i18n="motto-3-en">Solve user pain points before looking at metrics.</small>
+                            </div>
+                        </div>
+                        <div class="motto-item">
+                            <span class="motto-icon">⚖️</span>
+                            <div class="motto-text">
+                                <strong data-i18n="motto-4-tw">好產品來自取捨</strong>
+                                <small data-i18n="motto-4-en">Great products come from trade-offs.</small>
+                            </div>
+                        </div>
+                        <div class="motto-item">
+                            <span class="motto-icon">🔁</span>
+                            <div class="motto-text">
+                                <strong data-i18n="motto-5-tw">做中學，比想中快</strong>
+                                <small data-i18n="motto-5-en">Learning by doing is faster than learning by thinking.</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 新增：AI Tools Used -->
+                <div class="retro-card">
+                    <div class="card-title"><i class="ri-robot-2-line"></i> <span data-i18n="dash-ai-title">AI Tools Used</span></div>
+                    <ul class="learning-list">
+                        <li><strong>D-ID:</strong> Used for group-related content</li>
+                        <li><strong>NotebookLM / ChatGPT / Gemini:</strong> Helped integrate notes and generate summaries</li>
+                        <li><strong>Gemini Canvas:</strong> Used to build the webpage prototype</li>
+                    </ul>
+                </div>
+
+                <div class="retro-card">
+                    <div class="card-title" data-i18n="dash-progress">學習進度概覽</div>
+                    
+                    <div class="progress-container">
+                        <div class="progress-label"><span data-i18n="dash-video">影片觀看</span> <span id="stat-read-percent">0%</span></div>
+                        <div class="progress-track"><div class="progress-bar" id="bar-read" style="width: 0%"></div></div>
+                    </div>
+                    
+                    <div class="progress-container">
+                        <div class="progress-label"><span data-i18n="dash-quiz">測驗完成度</span> <span id="stat-quiz-percent">0%</span></div>
+                        <div class="progress-track"><div class="progress-bar" id="bar-quiz" style="width: 0%"></div></div>
+                    </div>
+
+                    <div class="progress-container">
+                        <div class="progress-label"><span data-i18n="dash-article">文章閱讀</span> <span id="stat-art-percent">0%</span></div>
+                        <div class="progress-track"><div class="progress-bar" id="bar-art" style="width: 0%"></div></div>
+                    </div>
+                </div>
+
+                <div class="retro-card">
+                    <div class="card-title" data-i18n="dash-activity">本週活躍度</div>
+                    <!-- 使用 JS 動態生成的活躍度圖表 -->
+                    <div class="activity-graph" id="activity-chart">
+                        <!-- Bars injected by JS -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        /* --- 用戶端資料庫模擬 (Local Storage) --- */
+        const DB_KEY = 'pm_retro_app_data_v1';
+        
+        // 初始資料結構
+        const defaultData = {
+            readCount: 0,        // 閱讀卡片次數
+            quizCompleted: 0,    // 完成測驗次數
+            quizScoreTotal: 0,   // 測驗總分
+            dailyActivity: [2, 4, 1, 5, 3, 0, 0] // 模擬過去7天 (最後一天是今天)
+        };
+
+        function loadData() {
+            const stored = localStorage.getItem(DB_KEY);
+            if (stored) {
+                return JSON.parse(stored);
+            }
+            return defaultData;
+        }
+
+        function saveData(data) {
+            localStorage.setItem(DB_KEY, JSON.stringify(data));
+            updateDashboardUI();
+        }
+
+        // 記錄活動 (閱讀/測驗)
+        function recordActivity(type) {
+            const data = loadData();
+            
+            // 增加今日活躍度 (陣列最後一個是今天)
+            data.dailyActivity[6] += 1;
+
+            if (type === 'read') {
+                data.readCount += 1;
+            } else if (type === 'quiz') {
+                data.quizCompleted += 1;
+            }
+
+            saveData(data);
+        }
+
+        function updateDashboardUI() {
+            const data = loadData();
+
+            // 1. 更新進度條 (模擬邏輯：閱讀次數/20 = %, 測驗次數/5 = %)
+            // 限制最大 100%
+            const readPercent = Math.min(Math.round((data.readCount / 20) * 100), 100);
+            const quizPercent = Math.min(Math.round((data.quizCompleted / 5) * 100), 100);
+            const artPercent = Math.min(Math.round((data.readCount / 10) * 100), 100); // 假設文章較少
+
+            document.getElementById('bar-read').style.width = readPercent + '%';
+            document.getElementById('stat-read-percent').textContent = readPercent + '%';
+
+            document.getElementById('bar-quiz').style.width = quizPercent + '%';
+            document.getElementById('stat-quiz-percent').textContent = quizPercent + '%';
+
+            document.getElementById('bar-art').style.width = artPercent + '%';
+            document.getElementById('stat-art-percent').textContent = artPercent + '%';
+
+            // 2. 更新活躍度圖表
+            const chartContainer = document.getElementById('activity-chart');
+            chartContainer.innerHTML = ''; // 清空
+            
+            const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']; // 簡化顯示
+            
+            // 找出最大值以計算比例 (避免爆表)
+            const maxVal = Math.max(...data.dailyActivity, 10); // 至少以10為基底
+
+            data.dailyActivity.forEach((val, idx) => {
+                const barHeight = Math.max((val / maxVal) * 100, 5); // 最小高度5%
+                const isToday = (idx === 6);
+                
+                const barDiv = document.createElement('div');
+                barDiv.className = `activity-bar ${val === 0 ? 'empty' : ''} ${isToday ? 'today' : ''}`;
+                barDiv.style.height = `${barHeight}%`;
+                
+                if (isToday) {
+                    const label = document.createElement('span');
+                    label.className = 'activity-label';
+                    label.textContent = 'Today';
+                    barDiv.appendChild(label);
+                }
+
+                chartContainer.appendChild(barDiv);
             });
         }
 
-        function updateLang() {
-            const t = langMap[currentLang];
-            els.mainTitle.textContent = t.title;
-            els.langText.textContent = t.btnText;
-            
-            document.querySelector('#welcome-title').textContent = t.welcome.title;
-            document.querySelector('#welcome-message').textContent = t.welcome.msg;
-            
-            // 更新 Section Titles
-            Object.keys(t.sectionTitles).forEach(id => {
-                const el = document.querySelector(`[data-section-title="${id}"]`);
-                if(el) el.textContent = t.sectionTitles[id];
-            });
+        /* --- 多語言資料 (Dictionary) --- */
+        const i18nData = {
+            tw: {
+                "menu-intro": "Group Intro",
+                "menu-learning": "Learning Zone",
+                "menu-glossary": "Glossary",
+                "menu-quiz": "Quiz Area",
+                "menu-dashboard": "Dashboard",
+                "btn-theme": "深色模式",
+                "title-group": "Group 2",
+                "subtitle-member": "Member",
+                "subtitle-collab": "團隊協作",
+                "collab-1": "每位成員皆參與資料收集與整理。",
+                "collab-2": "Laura 主要負責網頁建置。",
+                "name-laura": "鄭慧真",
+                "name-jane": "蔡家榛",
+                "name-sharron": "吳昱侖",
+                "name-ian": "吳秉益",
+                
+                // Learning Zone
+                "lz-card1-title": "PM 職涯導航",
+                "lz-card1-desc": "從校園到職場的宏觀視野，掌握職涯發展的三個層次與核心能力。",
+                "lz-card1-p1": "分析外部宏觀環境",
+                "lz-card2-title": "AI 賦能工作術",
+                "lz-card2-desc": "掌握生成式 AI 的核心技術與提詞技巧，讓 AI 成為你的最佳副手。",
+                "lz-card2-p1": "提詞模型",
+                "lz-card2-p2": "人類介入的判斷與驗證",
+                "lz-card2-p3": "擴散模型與影像生成原理",
+                "lz-card3-title": "產品開發流程管理",
+                "lz-card3-desc": "解析從概念到上市的標準化流程，以及各階段的關鍵檢核點。",
+                "lz-card3-p1": "六階段與三關卡檢核",
+                "lz-card3-p2-t": "產品生命週期",
+                "lz-card3-p2": "導入、成長、成熟、衰退",
+                "lz-card3-p3-t": "PM 核心職能",
+                "lz-card3-p3": "商業、技術、管理三大面向",
+                "lz-card4-title": "商業思維與決策",
+                "lz-card4-desc": "PM 不只是執行者，更是產品的 CEO。培養以數據為基礎的決策力。",
+                "lz-card4-p1": "像總經理一樣思考",
+                "lz-card4-p2": "驗證資訊",
+                "lz-card4-p3": "定價邏輯與營收分析",
+                "lz-card5-title": "使用者洞察與規劃",
+                "lz-card5-desc": "深入理解用戶需求，並將其轉化為可執行的產品路徑圖。",
+                "lz-card5-p1": "建立目標用戶人物誌",
+                "lz-card5-p2": "產品願景與發展藍圖",
+                "lz-card5-p3": "解決真實痛點而非憑空想像",
+                "lz-card6-title": "AI 商業營運應用",
+                "lz-card6-desc": "運用 AI 工具優化供應鏈管理與零售通路策略，提升營運效率。",
+                "lz-card6-p1": "需求預測與物流路徑優化",
+                "lz-card6-p2": "全通路整合 (O2O) 與 ROI 分析",
 
-            renderNav(); // 重繪導覽列以更新文字
-            renderContent(); // 重繪內容以更新 Dashboard/Group 等文字
+                // Glossary (包含原本的和新增的)
+                "term-mvp-title": "MVP (最小可行性產品)",
+                "term-mvp-desc": "用最低的成本，設計出能滿足核心需求的產品版本，用來測試市場反應。",
+                "term-genai-title": "Generative AI (生成式人工智慧)",
+                "term-genai-desc": "依據訓練資料自動產生文字、圖片、音訊等內容的 AI。",
+                "term-llm-title": "LLM (大型語言模型)",
+                "term-llm-desc": "能理解與生成自然語言的大型 AI 模型，例如 ChatGPT。",
+                "term-prompt-title": "Prompt (提示詞)",
+                "term-prompt-desc": "給 AI 的指令及輸入內容。",
+                "term-hallucination-title": "Hallucination (幻覺)",
+                "term-hallucination-desc": "AI 在沒有事實依據時產生錯誤或虛構內容。",
+                "term-roadmap-title": "Product Roadmap (產品路線圖)",
+                "term-roadmap-desc": "描述產品方向、優先事項、時間規劃的高層計畫。",
+                "term-user-centric-title": "User-centricity (使用者中心)",
+                "term-user-centric-desc": "以顧客需求為核心進行產品設計的思維。",
+                "term-npd-title": "NPD (新產品開發流程)",
+                "term-npd-desc": "從概念到上市的完整產品開發結構流程。",
+                "term-ksa-title": "KSA Framework (KSA 架構)",
+                "term-ksa-desc": "個人競爭力三構面：知識 (Knowledge)、技能 (Skill)、態度 (Attitude)。",
+                // 新增的 Glossary 翻譯
+                "term-crf-title": "C-R-F Model (C-R-F 提示技巧)",
+                "term-crf-desc": "包含 Context (情境)、Refine (精煉) 與 Feedback (回饋) 的提示詞撰寫技巧。",
+                "term-hitl-title": "Human-in-the-loop (人類介入決策)",
+                "term-hitl-desc": "人類持續檢查、修正並對 AI 生成的結果做最終決策，以確保正確性。",
+                "term-multi-title": "Multimodal Model (多模態模型)",
+                "term-multi-desc": "能同時處理文字、圖像等多種格式的模型。",
+                "term-persona-title": "Persona (使用者角色輪廓)",
+                "term-persona-desc": "模擬典型顧客的背景、需求與行為模式，用於指導產品設計。",
+                "term-ceo-title": "CEO/GM Mindset (CEO 思維)",
+                "term-ceo-desc": "PM 需像產品的總經理一樣，對產品的成敗負起全責並做出關鍵決策。",
+                "term-stagegate-title": "Stage-Gate Model (階段式關卡)",
+                "term-stagegate-desc": "將開發過程分為數個階段，每個階段結束後需通過審查才能進入下一階段。",
+                "term-prototype-title": "Prototype (原型)",
+                "term-prototype-desc": "初步建立的樣品，用來測試產品概念與設計是否可行。",
+                "term-pestel-title": "PESTEL Factors (PESTEL 因素)",
+                "term-pestel-desc": "分析外部環境的六大面向：政治、經濟、社會、科技、環境、法律。",
+                "term-threelevel-title": "Three-level Framework (三層次架構)",
+                "term-threelevel-desc": "連結學習與職涯的系統架構：看見世界、了解產業、塑造自己。",
+
+                "quiz-title": "PM 與 AI 基礎知識測驗",
+                "quiz-intro": "準備好挑戰了嗎？系統將從題庫隨機抽出 5 題。",
+                "quiz-btn-start": "開始測驗",
+                "quiz-completed": "測驗完成！",
+                "quiz-score": "你的得分",
+                "quiz-btn-restart": "再測一次",
+                "dash-progress": "學習進度概覽",
+                "dash-video": "影片觀看",
+                "dash-quiz": "測驗完成度",
+                "dash-article": "文章閱讀",
+                "dash-activity": "本週活躍度",
+                "dash-motto-title": "PM 座右銘",
+                "dash-ai-title": "使用的 AI 工具",
+                "motto-1-tw": "聚焦一件最重要的事",
+                "motto-1-en": "Focus on the one most important thing.",
+                "motto-2-tw": "方向對了，速度才有意義",
+                "motto-2-en": "Speed only matters when the direction is right.",
+                "motto-3-tw": "先解決用戶的痛，再看指標",
+                "motto-3-en": "Solve user pain points before looking at metrics.",
+                "motto-4-tw": "好產品來自取捨",
+                "motto-4-en": "Great products come from trade-offs.",
+                "motto-5-tw": "做中學，比想中快",
+                "motto-5-en": "Learning by doing is faster than learning by thinking."
+            },
+            en: {
+                "menu-intro": "Group Intro",
+                "menu-learning": "Learning Zone",
+                "menu-glossary": "Glossary",
+                "menu-quiz": "Quiz Area",
+                "menu-dashboard": "Dashboard",
+                "btn-theme": "Dark Mode",
+                "title-group": "Group 2",
+                "subtitle-member": "Member",
+                "subtitle-collab": "Team Collaboration",
+                "collab-1": "Everyone contributed to collecting and organizing data.",
+                "collab-2": "Laura mainly built the webpage.",
+                "name-laura": "Cheng, Hui-Chen",
+                "name-jane": "Tsai, Chia-Chen",
+                "name-sharron": "Wu, Yu-Lun",
+                "name-ian": "Wu, Ping-Yi",
+
+                // Learning Zone (English)
+                "lz-card1-title": "PM Career Navigation",
+                "lz-card1-desc": "Macro view from campus to career, mastering the 3 levels and core competencies.",
+                "lz-card1-p1": "Analyzing external macro-environment",
+                "lz-card2-title": "AI Empowerment",
+                "lz-card2-desc": "Mastering Gen AI core tech and prompting skills to make AI your best assistant.",
+                "lz-card2-p1": "Prompt Model",
+                "lz-card2-p2": "Human-in-the-loop judgment & verification",
+                "lz-card2-p3": "Diffusion models & image generation principles",
+                "lz-card3-title": "NPD Process Mgmt",
+                "lz-card3-desc": "Standardized process from concept to launch and key checkpoints.",
+                "lz-card3-p1": "6 Stages & 3 Gates Check",
+                "lz-card3-p2-t": "Product Life Cycle",
+                "lz-card3-p2": "Introduction, Growth, Maturity, Decline",
+                "lz-card3-p3-t": "PM Core Competencies",
+                "lz-card3-p3": "Business, Technical, Management domains",
+                "lz-card4-title": "Business Acumen",
+                "lz-card4-desc": "PM is the CEO of the product. Cultivating data-driven decision-making skills.",
+                "lz-card4-p1": "Think like a General Manager",
+                "lz-card4-p2": "Verify Information",
+                "lz-card4-p3": "Pricing logic & revenue analysis",
+                "lz-card5-title": "User Insight & Planning",
+                "lz-card5-desc": "Deeply understanding user needs and translating them into actionable roadmaps.",
+                "lz-card5-p1": "Building Target User Personas",
+                "lz-card5-p2": "Product Vision & Roadmap",
+                "lz-card5-p3": "Solving real pain points, not imagining them",
+                "lz-card6-title": "AI Business Operations",
+                "lz-card6-desc": "Optimizing supply chain and retail strategies with AI tools for operational efficiency.",
+                "lz-card6-p1": "Demand forecasting & logistics optimization",
+                "lz-card6-p2": "Omni-channel integration (O2O) & ROI analysis",
+
+                // Glossary (English)
+                "term-mvp-title": "MVP (Minimum Viable Product)",
+                "term-mvp-desc": "A version of a product with just enough features to be usable by early customers.",
+                "term-genai-title": "Generative AI",
+                "term-genai-desc": "AI that generates text, images, audio, etc., based on training data.",
+                "term-llm-title": "LLM (Large Language Model)",
+                "term-llm-desc": "Large AI models capable of understanding and generating natural language (e.g., ChatGPT).",
+                "term-prompt-title": "Prompt",
+                "term-prompt-desc": "Instructions and input content given to AI.",
+                "term-hallucination-title": "Hallucination",
+                "term-hallucination-desc": "When AI generates incorrect or fictional content without factual basis.",
+                "term-roadmap-title": "Product Roadmap",
+                "term-roadmap-desc": "A high-level plan describing product direction, priorities, and timeline.",
+                "term-user-centric-title": "User-centricity",
+                "term-user-centric-desc": "Thinking that places customer needs at the core of product design.",
+                "term-npd-title": "NPD (New Product Development)",
+                "term-npd-desc": "The complete structural process from concept to market launch.",
+                "term-ksa-title": "KSA Framework",
+                "term-ksa-desc": "Three dimensions of personal competency: Knowledge, Skill, and Attitude.",
+                // New Glossary English
+                "term-crf-title": "C-R-F Model",
+                "term-crf-desc": "A prompting technique involving Context, Refine, and Feedback.",
+                "term-hitl-title": "Human-in-the-loop",
+                "term-hitl-desc": "Humans checking and correcting AI outputs to ensure accuracy and reliability.",
+                "term-multi-title": "Multimodal Model",
+                "term-multi-desc": "Models that can process multiple types of input (text, images, etc.) simultaneously.",
+                "term-persona-title": "Persona",
+                "term-persona-desc": "A profile of a typical user used to guide product design and meet needs.",
+                "term-ceo-title": "CEO/GM Mindset",
+                "term-ceo-desc": "PMs taking full ownership and making key decisions like a General Manager.",
+                "term-stagegate-title": "Stage-Gate Model",
+                "term-stagegate-desc": "A process where product development is divided into stages separated by decision gates.",
+                "term-prototype-title": "Prototype",
+                "term-prototype-desc": "An early sample or model built to test a concept or process.",
+                "term-pestel-title": "PESTEL Factors",
+                "term-pestel-desc": "Framework for analyzing Political, Economic, Social, Technological, Environmental, and Legal factors.",
+                "term-threelevel-title": "Three-level Framework",
+                "term-threelevel-desc": "A systematic approach connecting learning to career: See the World, Understand Industry, Shape Yourself.",
+
+                "quiz-title": "PM & AI Basic Quiz",
+                "quiz-intro": "Ready for the challenge? System will randomly select 5 questions.",
+                "quiz-btn-start": "Start Quiz",
+                "quiz-completed": "Quiz Completed!",
+                "quiz-score": "Your Score",
+                "quiz-btn-restart": "Play Again",
+                "dash-progress": "Learning Progress",
+                "dash-video": "Video Watch",
+                "dash-quiz": "Quiz Complete",
+                "dash-article": "Article Read",
+                "dash-activity": "Weekly Activity",
+                "dash-motto-title": "PM Mottos",
+                "dash-ai-title": "AI Tools Used",
+                "motto-1-tw": "Focus on the one most important thing",
+                "motto-1-en": "",
+                "motto-2-tw": "Speed only matters when the direction is right",
+                "motto-2-en": "",
+                "motto-3-tw": "Solve user pain points before looking at metrics",
+                "motto-3-en": "",
+                "motto-4-tw": "Great products come from trade-offs",
+                "motto-4-en": "",
+                "motto-5-tw": "Learning by doing is faster than learning by thinking",
+                "motto-5-en": ""
+            }
+        };
+
+        let currentLang = 'tw'; // 預設語言
+
+        function toggleTheme() {
+            const body = document.body;
+            const btnText = document.querySelector('#theme-btn span');
+            const icon = document.querySelector('#theme-btn i');
+            
+            if (body.hasAttribute('data-theme')) {
+                body.removeAttribute('data-theme');
+                btnText.textContent = currentLang === 'tw' ? "深色模式" : "Dark Mode";
+                icon.className = "ri-moon-line";
+            } else {
+                body.setAttribute('data-theme', 'dark');
+                btnText.textContent = currentLang === 'tw' ? "亮色模式" : "Light Mode";
+                icon.className = "ri-sun-line";
+            }
         }
 
-        // 啟動
-        init();
+        function toggleLanguage() {
+            currentLang = currentLang === 'tw' ? 'en' : 'tw';
+            const langLabel = document.getElementById('lang-label');
+            
+            // 切換按鈕文字
+            langLabel.textContent = currentLang === 'tw' ? "English" : "繁體中文";
+            
+            // 更新深色模式按鈕的文字 (避免切換語言後按鈕文字沒變)
+            const isDark = document.body.hasAttribute('data-theme');
+            const themeText = document.querySelector('#theme-btn span');
+            if(isDark) {
+                themeText.textContent = currentLang === 'tw' ? "亮色模式" : "Light Mode";
+            } else {
+                themeText.textContent = currentLang === 'tw' ? "深色模式" : "Dark Mode";
+            }
 
+            // 更新所有帶有 data-i18n 的元素
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (i18nData[currentLang][key]) {
+                    el.textContent = i18nData[currentLang][key];
+                }
+            });
+        }
+
+        /* --- 原有的分頁切換 --- */
+        function switchTab(sectionId, btnElement) {
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+            btnElement.classList.add('active');
+            document.querySelectorAll('.section-content').forEach(section => section.classList.remove('active'));
+            document.getElementById(sectionId).classList.add('active');
+            
+            // 若 key 存在，更新 header 標題
+            const titleMap = {
+                'group-intro': 'title-group',
+                'learning-zone': 'menu-learning', 
+                'glossary': 'menu-glossary',
+                'quiz-area': 'menu-quiz',
+                'dashboard': 'menu-dashboard'
+            };
+            const titleKey = titleMap[sectionId];
+            if(titleKey) {
+                const pageTitle = document.getElementById('page-title');
+                pageTitle.setAttribute('data-i18n', titleKey);
+                pageTitle.textContent = i18nData[currentLang][titleKey];
+            }
+        }
+
+        /* --- 25題 題庫資料 (ans: 0=A, 1=B, 2=C, 3=D) --- */
+        const questionBank = [
+            { q: "什麼是 Prompt？", options: ["AI 自動產生的回答", "使用者給 AI 的指令", "AI 的資料庫", "AI 的錯誤輸出"], ans: 1 },
+            { q: "下列哪一項「不是」好 Prompt 的必要元素？", options: ["Keywords", "Target audience", "AI 的訓練資料", "輸出格式"], ans: 2 },
+            { q: "指定輸出格式（如 bullet points）的主要目的為何？", options: ["讓 AI 回答更長", "讓內容更容易閱讀與使用", "增加 AI 計算速度", "避免 AI 出錯"], ans: 1 },
+            { q: "Human-in-the-loop 的核心概念是？", options: ["讓 AI 完全自動決策", "人類不需再檢查 AI", "人類持續參與並做最終決定", "AI 取代人類思考"], ans: 2 },
+            { q: "為什麼 AI 的回答需要被驗證？", options: ["AI 回答一定是錯的", "AI 可能會產生幻覺", "AI 不懂英文", "AI 無法整理資訊"], ans: 1 },
+            { q: "下列何者最能形容 AI 在學習中的角色？", options: ["老師", "考官", "學習夥伴", "決策者"], ans: 2 },
+            { q: "將長文章整理成 Problem / Solution / Example 屬於哪種用途？", options: ["內容創作", "資料加密", "資訊標籤與整理", "圖像生成"], ans: 2 },
+            { q: "什麼是 LLM？", options: ["一種資料庫系統", "一種影像編輯工具", "理解並產生人類語言的 AI", "自動化機器人"], ans: 2 },
+            { q: "為什麼 Prompt 設計是一個「反覆嘗試」的過程？", options: ["AI 每次都會忘記", "沒有完美的一次性 Prompt", "AI 只能回答一次", "Prompt 有字數限制"], ans: 1 },
+            { q: "下列何者是 LLM 的限制？", options: ["無法產生文字", "無法理解語言", "有知識截止時間", "無法學習"], ans: 2 },
+            { q: "什麼是 AI hallucination？", options: ["AI 產生圖片", "AI 停止運作", "AI 編造看似合理但錯誤的內容", "AI 回答太慢"], ans: 2 },
+            { q: "LLM 最不擅長處理哪一種資料？", options: ["長篇文章", "圖像描述", "表格與結構化資料", "對話文字"], ans: 2 },
+            { q: "為什麼使用 LLM 時要小心機密資訊？", options: ["AI 會自動公開", "AI 可能會記住", "不清楚資料如何被保存與使用", "AI 無法讀取"], ans: 2 },
+            { q: "生成圖片最常使用哪一種模型？", options: ["Classification model", "Diffusion model", "Regression model", "Rule-based model"], ans: 1 },
+            { q: "Diffusion model 生成圖片的起點是？", options: ["清晰圖片", "半成品圖片", "純雜訊圖片", "使用者照片"], ans: 2 },
+            { q: "Product Manager（PM）最主要的角色是？", options: ["寫程式", "設計 UI", "擁有並負責產品決策", "做行政工作"], ans: 2 },
+            { q: "PM 「Think like a CEO/GM」代表什麼？", options: ["只關心技術", "只等指示", "對產品整體負責", "只做執行"], ans: 2 },
+            { q: "「Don’t Trust, Verify」最強調的是？", options: ["速度", "直覺", "批判性思考", "團隊合作"], ans: 2 },
+            { q: "下列何者屬於 Business Acumen？", options: ["UI 設計", "Revenue 與 Profit 理解", "寫程式能力", "圖像生成"], ans: 1 },
+            { q: "為什麼 PM 需要定價邏輯？", options: ["為了美觀", "為了使用者介面", "支持商業決策", "為了工程需求"], ans: 2 },
+            { q: "Payback months 用來衡量什麼？", options: ["使用者滿意度", "回收成本所需時間", "系統穩定度", "設計效率"], ans: 1 },
+            { q: "Prioritization 對 PM 很重要，主要原因是？", options: ["使用者太多", "技術太複雜", "資源有限", "公司太大"], ans: 2 },
+            { q: "User-centricity 的核心是？", options: ["滿足老闆", "解決真實使用者需求", "追求最新技術", "降低成本"], ans: 1 },
+            { q: "Decision-maker 與 Executor 最大差異在於？", options: ["是否寫程式", "是否做報告", "是否為結果負責", "是否使用 AI"], ans: 2 },
+            { q: "即使資料不完整，PM 仍需做決策的原因是？", options: ["時間與商業壓力", "AI 會幫忙", "工程師要求", "使用者不知道"], ans: 0 }
+        ];
+
+        /* --- 測驗邏輯 --- */
+        let currentQuizQuestions = [];
+        let currentQuestionIdx = 0;
+        let score = 0;
+        let isAnswered = false;
+
+        function startQuiz() {
+            // 1. 隨機選 5 題
+            const shuffled = [...questionBank].sort(() => 0.5 - Math.random());
+            currentQuizQuestions = shuffled.slice(0, 5);
+            
+            // 2. 初始化狀態
+            currentQuestionIdx = 0;
+            score = 0;
+            isAnswered = false;
+
+            // 3. 切換畫面
+            document.getElementById('quiz-start-screen').classList.add('d-none');
+            document.getElementById('quiz-result-screen').classList.add('d-none');
+            document.getElementById('quiz-question-screen').classList.remove('d-none');
+            
+            // 4. 渲染第一題
+            renderQuestion();
+        }
+
+        function renderQuestion() {
+            const qData = currentQuizQuestions[currentQuestionIdx];
+            isAnswered = false;
+
+            // 更新進度與分數
+            document.getElementById('quiz-progress').textContent = `Question ${currentQuestionIdx + 1}/5`;
+            document.getElementById('quiz-score-display').textContent = `Score: ${score}`;
+            document.getElementById('quiz-q-text').textContent = qData.q;
+            
+            // 清空舊選項 & 回饋
+            const optionsContainer = document.getElementById('quiz-options-container');
+            optionsContainer.innerHTML = '';
+            document.getElementById('quiz-feedback').textContent = '';
+            document.getElementById('quiz-next-btn').classList.add('d-none');
+
+            // 建立新選項
+            qData.options.forEach((optText, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'quiz-option';
+                btn.textContent = optText;
+                btn.onclick = () => selectOption(idx, btn);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function selectOption(selectedIdx, btnElement) {
+            if (isAnswered) return; // 防止重複點擊
+            isAnswered = true;
+
+            const qData = currentQuizQuestions[currentQuestionIdx];
+            const isCorrect = (selectedIdx === qData.ans);
+            const feedback = document.getElementById('quiz-feedback');
+            const allBtns = document.querySelectorAll('#quiz-options-container .quiz-option');
+
+            // 鎖定所有按鈕
+            allBtns.forEach(btn => btn.classList.add('disabled'));
+
+            // 顯示結果
+            if (isCorrect) {
+                score++;
+                btnElement.style.background = 'var(--c-green)';
+                btnElement.style.color = '#fff';
+                /* 修正：將回饋文字改為 accent color */
+                feedback.style.color = 'var(--c-text-accent)';
+                feedback.textContent = currentLang === 'tw' ? "恭喜答對！" : "Correct!";
+            } else {
+                btnElement.style.background = 'var(--c-red)';
+                btnElement.style.color = '#fff';
+                feedback.style.color = 'var(--c-red)';
+                feedback.textContent = currentLang === 'tw' ? "答錯了！正確答案是: " + qData.options[qData.ans] : "Wrong! Correct answer: " + qData.options[qData.ans];
+                
+                // 標示正確答案
+                allBtns[qData.ans].style.background = 'var(--c-yellow)';
+                allBtns[qData.ans].style.color = '#000';
+            }
+
+            // 更新即時分數
+            recordActivity('quiz'); // 每次作答都記錄
+            document.getElementById('quiz-score-display').textContent = `Score: ${score}`;
+
+            // 顯示下一題按鈕 (如果是最後一題，按鈕文字可以改為 "看結果")
+            const nextBtn = document.getElementById('quiz-next-btn');
+            nextBtn.classList.remove('d-none');
+            if (currentQuestionIdx === 4) {
+                nextBtn.innerHTML = currentLang === 'tw' ? '查看結果 <i class="ri-trophy-line"></i>' : 'View Result <i class="ri-trophy-line"></i>';
+            } else {
+                nextBtn.innerHTML = currentLang === 'tw' ? '下一題 <i class="ri-arrow-right-line"></i>' : 'Next Question <i class="ri-arrow-right-line"></i>';
+            }
+        }
+
+        function nextQuestion() {
+            if (currentQuestionIdx < 4) {
+                currentQuestionIdx++;
+                renderQuestion();
+            } else {
+                showResult();
+            }
+        }
+
+        function showResult() {
+            document.getElementById('quiz-question-screen').classList.add('d-none');
+            document.getElementById('quiz-result-screen').classList.remove('d-none');
+            document.getElementById('quiz-final-score').textContent = score;
+        }
+
+        function checkAnswer(btn, isCorrect) {
+            const feedback = document.getElementById('quiz-feedback');
+            document.querySelectorAll('.quiz-option').forEach(opt => {
+                opt.style.background = 'var(--c-card-bg)';
+                opt.style.color = 'var(--c-text)';
+            });
+
+            if (isCorrect) {
+                btn.style.background = 'var(--c-green)';
+                btn.style.color = '#fff';
+                feedback.style.color = 'var(--c-text-accent)';
+                feedback.textContent = currentLang === 'tw' ? "恭喜答對！" : "Correct!";
+            } else {
+                btn.style.background = 'var(--c-red)';
+                btn.style.color = '#fff';
+                feedback.style.color = 'var(--c-red)';
+                feedback.textContent = currentLang === 'tw' ? "哎呀，答錯了，再試試看！" : "Oops! Wrong answer, try again.";
+            }
+        }
+        
+        // 初始載入 Dashboard
+        window.onload = function() {
+            updateDashboardUI();
+        };
     </script>
 </body>
 </html>
